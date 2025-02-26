@@ -33,7 +33,7 @@ const AdminDashboard = () => {
           <nav className="glass-panel fixed top-0 left-0 right-0 z-50">
             <div className="container mx-auto px-4 py-4 flex justify-between items-center">
               <div className="flex items-center gap-4">
-                <div className="text-2xl font-semibold text-primary">Medique Admin</div>
+                <div className="text-2xl font-semibold text-primary ml-12">Medique Admin</div>
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="ghost" onClick={handleLogout}>
