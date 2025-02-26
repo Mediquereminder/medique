@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Package, Users, AlertTriangle, LogOut, Menu } from "lucide-react";
@@ -7,6 +7,13 @@ import { AppSidebar } from "@/components/AppSidebar";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    return localStorage.getItem("sidebarState") === "true";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("sidebarState", String(sidebarOpen));
+  }, [sidebarOpen]);
   
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -24,7 +31,10 @@ const AdminDashboard = () => {
   };
 
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider 
+      defaultOpen={sidebarOpen} 
+      onOpenChange={(open) => setSidebarOpen(open)}
+    >
       <div className="min-h-screen flex w-full bg-muted/30">
         <AppSidebar role="admin" />
         <div className="flex-1">
