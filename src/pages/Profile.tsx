@@ -45,6 +45,10 @@ const Profile = () => {
       ...prev,
       name: user.name || "",
       email: user.email || "",
+      phone: user.phone || "",
+      address: user.address || "",
+      emergencyContact: user.emergencyContact || "",
+      profilePic: user.profilePic || prev.profilePic,
     }));
   }, [navigate]);
 
@@ -68,16 +72,37 @@ const Profile = () => {
   };
 
   const handleSave = () => {
-    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
-    const updatedUser = { ...currentUser, ...profile };
-    localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-    
-    toast({
-      title: "Profile Updated",
-      description: "Your profile has been successfully updated.",
-    });
-    
-    setIsEditing(false);
+    try {
+      const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+      // Only save essential profile data
+      const updatedUser = {
+        ...currentUser,
+        name: profile.name,
+        email: profile.email,
+        phone: profile.phone,
+        address: profile.address,
+        emergencyContact: profile.emergencyContact,
+        // Only save the profilePic if it's different from the default
+        ...(profile.profilePic !== "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=200&h=200&fit=crop" && {
+          profilePic: profile.profilePic,
+        }),
+      };
+      
+      localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+      
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated.",
+      });
+      
+      setIsEditing(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save changes. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
