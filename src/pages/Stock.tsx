@@ -15,6 +15,10 @@ import {
   Trash2,
   AlertTriangle,
   Eye,
+  Pill,
+  Calendar,
+  Package,
+  Shield,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -109,13 +113,14 @@ const Stock = () => {
 
   return (
     <SidebarProvider defaultOpen={false}>
-      <div className="min-h-screen flex w-full bg-muted/30">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <AppSidebar role={userRole} />
         <div className="flex-1">
-          <nav className="glass-panel fixed top-0 left-0 right-0 z-50">
+          <nav className="glass-panel fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-white/80">
             <div className="container mx-auto px-4 py-4 flex justify-between items-center">
               <div className="flex items-center gap-4">
-                <div className="text-2xl font-semibold text-primary ml-12">
+                <div className="text-2xl font-semibold text-primary ml-12 flex items-center gap-2">
+                  <Package className="w-6 h-6" />
                   Medique
                 </div>
               </div>
@@ -141,9 +146,15 @@ const Stock = () => {
             <main className="container mx-auto px-4 py-8">
               <div className="grid gap-6">
                 {/* Role Indicator */}
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold">Medicine Stock</h2>
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <Shield className="w-8 h-8 text-primary" />
+                    <div>
+                      <h2 className="text-2xl font-bold">Medicine Stock</h2>
+                      <p className="text-muted-foreground">Manage your medicine inventory</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary animate-fade-in">
                     <Eye className="w-4 h-4" />
                     <span>{userRole === 'patient' ? 'View Only Mode' : 'Full Access Mode'}</span>
                   </div>
@@ -151,13 +162,16 @@ const Stock = () => {
 
                 {/* Add New Medicine - Only visible to caretakers */}
                 {userRole !== 'patient' && (
-                  <Card>
+                  <Card className="border-2 border-primary/20 shadow-lg hover:shadow-xl transition-shadow duration-300">
                     <CardHeader>
-                      <CardTitle>Add New Medicine</CardTitle>
+                      <CardTitle className="flex items-center gap-2">
+                        <Pill className="w-5 h-5 text-primary" />
+                        Add New Medicine
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                        <div className="grid gap-2">
+                      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                        <div className="space-y-2">
                           <Label htmlFor="name">Medicine Name</Label>
                           <Input
                             id="name"
@@ -168,9 +182,11 @@ const Stock = () => {
                                 name: e.target.value,
                               }))
                             }
+                            className="border-2 hover:border-primary/50 transition-colors"
+                            placeholder="Enter medicine name"
                           />
                         </div>
-                        <div className="grid gap-2">
+                        <div className="space-y-2">
                           <Label htmlFor="quantity">Initial Quantity</Label>
                           <Input
                             id="quantity"
@@ -183,9 +199,10 @@ const Stock = () => {
                                 quantity: parseInt(e.target.value) || 0,
                               }))
                             }
+                            className="border-2 hover:border-primary/50 transition-colors"
                           />
                         </div>
-                        <div className="grid gap-2">
+                        <div className="space-y-2">
                           <Label htmlFor="threshold">Alert Threshold</Label>
                           <Input
                             id="threshold"
@@ -198,9 +215,10 @@ const Stock = () => {
                                 threshold: parseInt(e.target.value) || 0,
                               }))
                             }
+                            className="border-2 hover:border-primary/50 transition-colors"
                           />
                         </div>
-                        <div className="grid gap-2">
+                        <div className="space-y-2">
                           <Label htmlFor="expiry">Expiry Date</Label>
                           <Input
                             id="expiry"
@@ -212,10 +230,14 @@ const Stock = () => {
                                 expiryDate: e.target.value,
                               }))
                             }
+                            className="border-2 hover:border-primary/50 transition-colors"
                           />
                         </div>
                       </div>
-                      <Button className="mt-4" onClick={handleAddMedicine}>
+                      <Button 
+                        className="mt-6 w-full md:w-auto transform hover:scale-105 transition-transform duration-200"
+                        onClick={handleAddMedicine}
+                      >
                         <Plus className="w-4 h-4 mr-2" />
                         Add Medicine
                       </Button>
@@ -224,9 +246,12 @@ const Stock = () => {
                 )}
 
                 {/* Medicine List */}
-                <Card>
+                <Card className="border-2 border-primary/20 shadow-lg">
                   <CardHeader>
-                    <CardTitle>Medicine Stock</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="w-5 h-5 text-primary" />
+                      Medicine Stock
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid gap-4">
@@ -239,36 +264,51 @@ const Stock = () => {
                         return (
                           <div
                             key={medicine.id}
-                            className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border"
+                            className={`
+                              flex items-center justify-between p-6 
+                              bg-white rounded-lg shadow-sm border-2
+                              ${isLow ? 'border-red-200' : 'border-primary/20'}
+                              transform hover:scale-[1.01] transition-all duration-200
+                              hover:shadow-md
+                            `}
                           >
-                            <div className="flex-1 grid gap-1">
+                            <div className="flex-1 grid gap-2">
                               <div className="flex items-center gap-2">
-                                <span className="font-medium">{medicine.name}</span>
+                                <Pill className="w-5 h-5 text-primary" />
+                                <span className="font-medium text-lg">{medicine.name}</span>
                                 {isLow && (
-                                  <AlertCircle className="w-4 h-4 text-red-500" />
+                                  <div className="flex items-center gap-1 px-2 py-1 bg-red-50 text-red-500 rounded-full text-sm">
+                                    <AlertCircle className="w-4 h-4" />
+                                    Low Stock
+                                  </div>
                                 )}
                                 {isExpiringSoon && (
-                                  <AlertTriangle className="w-4 h-4 text-yellow-500" />
+                                  <div className="flex items-center gap-1 px-2 py-1 bg-yellow-50 text-yellow-500 rounded-full text-sm">
+                                    <AlertTriangle className="w-4 h-4" />
+                                    Expiring Soon
+                                  </div>
                                 )}
                               </div>
-                              <div className="text-sm text-muted-foreground">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Calendar className="w-4 h-4" />
                                 Expires: {new Date(medicine.expiryDate).toLocaleDateString()}
                               </div>
                             </div>
                             <div className="flex items-center gap-4">
                               {userRole !== 'patient' ? (
                                 <>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-2">
                                     <Button
                                       variant="outline"
                                       size="icon"
                                       onClick={() =>
                                         handleUpdateQuantity(medicine.id, -1)
                                       }
+                                      className="hover:bg-red-50 hover:text-red-500 transition-colors"
                                     >
                                       -
                                     </Button>
-                                    <span className="w-12 text-center">
+                                    <span className="w-12 text-center font-medium">
                                       {medicine.quantity}
                                     </span>
                                     <Button
@@ -277,6 +317,7 @@ const Stock = () => {
                                       onClick={() =>
                                         handleUpdateQuantity(medicine.id, 1)
                                       }
+                                      className="hover:bg-green-50 hover:text-green-500 transition-colors"
                                     >
                                       +
                                     </Button>
@@ -284,14 +325,14 @@ const Stock = () => {
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                    className="text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors"
                                     onClick={() => handleDeleteMedicine(medicine.id)}
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </Button>
                                 </>
                               ) : (
-                                <span className="text-center">
+                                <span className="px-4 py-2 bg-gray-50 rounded-lg font-medium">
                                   Quantity: {medicine.quantity}
                                 </span>
                               )}
@@ -300,8 +341,12 @@ const Stock = () => {
                         );
                       })}
                       {medicines.length === 0 && (
-                        <div className="text-center py-8 text-muted-foreground">
-                          No medicines in stock. {userRole !== 'patient' ? 'Add some medicines to get started.' : ''}
+                        <div className="text-center py-12 text-muted-foreground">
+                          <Package className="w-12 h-12 mx-auto mb-4 text-primary/40" />
+                          <p>No medicines in stock.</p>
+                          {userRole !== 'patient' && (
+                            <p className="text-sm">Add some medicines to get started.</p>
+                          )}
                         </div>
                       )}
                     </div>
