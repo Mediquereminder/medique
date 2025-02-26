@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,28 +14,6 @@ const ResetPassword = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isValidResetSession, setIsValidResetSession] = useState(false);
-
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      // Check if we're in a valid password reset session
-      if (!session && !window.location.hash.includes('type=recovery')) {
-        toast({
-          variant: "destructive",
-          title: "Invalid Reset Link",
-          description: "Please request a new password reset link.",
-        });
-        navigate('/forgot-password');
-        return;
-      }
-      
-      setIsValidResetSession(true);
-    };
-
-    checkSession();
-  }, [navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,19 +29,9 @@ const ResetPassword = () => {
       return;
     }
 
-    if (newPassword.length < 6) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Password must be at least 6 characters long.",
-      });
-      setIsLoading(false);
-      return;
-    }
-
     try {
       const { error } = await supabase.auth.updateUser({
-        password: newPassword
+        password: newPassword,
       });
 
       if (error) throw error;
@@ -73,8 +41,6 @@ const ResetPassword = () => {
         description: "Your password has been reset successfully.",
       });
       
-      // Sign out the user after password reset
-      await supabase.auth.signOut();
       navigate("/login");
     } catch (error: any) {
       toast({
@@ -86,16 +52,6 @@ const ResetPassword = () => {
       setIsLoading(false);
     }
   };
-
-  if (!isValidResetSession) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30">
-        <div className="text-center">
-          <p>Validating reset link...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/30">
