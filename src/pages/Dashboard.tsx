@@ -101,8 +101,8 @@ const Dashboard = () => {
                 <h2 className="text-2xl font-bold text-primary mb-8">Medication Timeline</h2>
                 
                 {/* 3D Timeline Row */}
-                <div className="w-full overflow-x-auto perspective-[2000px] py-20">
-                  <div className="flex gap-4 px-[40%] min-w-max">
+                <div className="w-full overflow-x-auto perspective-[2000px] py-20 scrollbar-hide">
+                  <div className="flex gap-2 px-[40%] min-w-max">
                     {medications.map((med, index) => (
                       <Card
                         key={med.id}
@@ -151,6 +151,16 @@ const Dashboard = () => {
                     ))}
                   </div>
                 </div>
+
+                <style jsx global>{`
+                  .scrollbar-hide {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
+                  }
+                  .scrollbar-hide::-webkit-scrollbar {
+                    display: none;
+                  }
+                `}</style>
               </div>
             </main>
           </div>
