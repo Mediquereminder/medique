@@ -32,7 +32,7 @@ export function AppSidebar({ role }: AppSidebarProps) {
                 <SidebarMenuButton asChild>
                   <Button 
                     variant="ghost" 
-                    className="w-full justify-start" 
+                    className="w-full justify-start hover:text-[#0EA5E9] hover:bg-[#0EA5E9]/10" 
                     onClick={() => navigate(basePath)}
                   >
                     <Home className="h-4 w-4" />
@@ -44,7 +44,7 @@ export function AppSidebar({ role }: AppSidebarProps) {
                 <SidebarMenuButton asChild>
                   <Button 
                     variant="ghost" 
-                    className="w-full justify-start"
+                    className="w-full justify-start hover:text-[#0EA5E9] hover:bg-[#0EA5E9]/10"
                     onClick={() => navigate(`${basePath}/stock`)}
                   >
                     <Package className="h-4 w-4" />
@@ -56,7 +56,7 @@ export function AppSidebar({ role }: AppSidebarProps) {
                 <SidebarMenuButton asChild>
                   <Button 
                     variant="ghost" 
-                    className="w-full justify-start"
+                    className="w-full justify-start hover:text-[#0EA5E9] hover:bg-[#0EA5E9]/10"
                     onClick={() => navigate(`${basePath}/profile`)}
                   >
                     <UserCircle className="h-4 w-4" />
