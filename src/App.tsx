@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminStock from "./pages/AdminStock";
 import AdminProfile from "./pages/AdminProfile";
+import AdminPatients from "./pages/AdminPatients";
 import History from "./pages/History";
 import Profile from "./pages/Profile";
 import Stock from "./pages/Stock";
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/dashboard/stock" element={<Stock />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/admin-dashboard/stock" element={<AdminStock />} />
+          <Route path="/admin-dashboard/patients" element={<AdminPatients />} />
           <Route path="/admin-dashboard/history" element={<History />} />
           <Route path="/admin-dashboard/profile" element={<AdminProfile />} />
           <Route path="*" element={<NotFound />} />
