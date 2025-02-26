@@ -15,23 +15,27 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Check if user is already logged in
+  // Check if user is already logged in - but don't block the form rendering
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        // Fetch user role and redirect accordingly
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          // Fetch user role and redirect accordingly
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
 
-        if (profileData?.role === "admin") {
-          navigate("/admin-dashboard");
-        } else {
-          navigate("/dashboard");
+          if (profileData?.role === "admin") {
+            navigate("/admin-dashboard");
+          } else {
+            navigate("/dashboard");
+          }
         }
+      } catch (error) {
+        console.error("Session check error:", error);
       }
     };
 
@@ -43,33 +47,38 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      const { data: { user }, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
 
-      if (user) {
+      if (data.user) {
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('role')
-          .eq('id', user.id)
+          .eq('id', data.user.id)
           .single();
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error("Profile fetch error:", profileError);
+          throw new Error("Failed to fetch user profile");
+        }
 
         toast({
           title: "Welcome back!",
           description: "Login successful.",
         });
 
-        // Redirect based on role
-        if (profileData?.role === "admin") {
-          navigate("/admin-dashboard");
-        } else {
-          navigate("/dashboard");
-        }
+        // Redirect based on role with a slight delay to ensure toast is shown
+        setTimeout(() => {
+          if (profileData?.role === "admin") {
+            navigate("/admin-dashboard");
+          } else {
+            navigate("/dashboard");
+          }
+        }, 500);
       }
     } catch (error: any) {
       console.error("Login error:", error);
@@ -118,6 +127,7 @@ const Login = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    autoComplete="email"
                   />
                 </div>
               </div>
@@ -134,6 +144,7 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    autoComplete="current-password"
                   />
                 </div>
               </div>
