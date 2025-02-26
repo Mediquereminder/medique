@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -32,6 +31,7 @@ const Profile = () => {
     profilePic: "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=200&h=200&fit=crop",
   });
   const [userRole, setUserRole] = useState<'patient' | 'admin'>('patient');
+  const [patientId, setPatientId] = useState("");
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -53,6 +53,65 @@ const Profile = () => {
       profilePic: user.profilePic || prev.profilePic,
     }));
   }, [navigate]);
+
+  const handleConnectPatient = () => {
+    if (!patientId.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid Patient ID",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+    
+    // Find the patient
+    const patient = users.find((user: any) => user.userId === patientId && user.role === "patient");
+    
+    if (!patient) {
+      toast({
+        title: "Error",
+        description: "Patient not found. Please check the ID and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Update the caretaker's connected patients
+    const updatedUsers = users.map((user: any) => {
+      if (user.email === currentUser.email) {
+        return {
+          ...user,
+          connectedPatients: [...(user.connectedPatients || []), patientId]
+        };
+      }
+      if (user.userId === patientId) {
+        return {
+          ...user,
+          connectedCaretakers: [...(user.connectedCaretakers || []), currentUser.userId]
+        };
+      }
+      return user;
+    });
+
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
+    
+    // Update current user in localStorage
+    const updatedCurrentUser = {
+      ...currentUser,
+      connectedPatients: [...(currentUser.connectedPatients || []), patientId]
+    };
+    localStorage.setItem("currentUser", JSON.stringify(updatedCurrentUser));
+
+    toast({
+      title: "Success",
+      description: "Patient connected successfully!",
+    });
+
+    setPatientId("");
+  };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -108,7 +167,7 @@ const Profile = () => {
   return (
     <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full bg-muted/30">
-        <AppSidebar role="patient" />
+        <AppSidebar role={userRole} />
         <div className="flex-1">
           <nav className="glass-panel fixed top-0 left-0 right-0 z-50">
             <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -148,6 +207,42 @@ const Profile = () => {
                     )}
                   </div>
                 </div>
+
+                <Card className="w-full max-w-2xl mb-6">
+                  <CardHeader>
+                    <CardTitle>Your ID</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-lg font-mono bg-muted p-2 rounded">
+                      {JSON.parse(localStorage.getItem("currentUser") || "{}")?.userId || "Not available"}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {userRole === 'patient' 
+                        ? "Share this ID with your caretaker to connect with them"
+                        : "Use this ID to identify yourself to patients"}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {userRole === 'admin' && (
+                  <Card className="w-full max-w-2xl mb-6">
+                    <CardHeader>
+                      <CardTitle>Connect with Patient</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex gap-4">
+                        <Input
+                          placeholder="Enter Patient ID"
+                          value={patientId}
+                          onChange={(e) => setPatientId(e.target.value)}
+                        />
+                        <Button onClick={handleConnectPatient}>
+                          Connect
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 <Card className="w-full max-w-2xl">
                   <CardHeader>

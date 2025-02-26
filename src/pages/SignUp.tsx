@@ -7,6 +7,10 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Mail, Lock, User } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
+const generateUniqueId = () => {
+  return Math.random().toString(36).substr(2, 9).toUpperCase();
+};
+
 const SignUp = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -14,7 +18,7 @@ const SignUp = () => {
     name: "",
     email: "",
     password: "",
-    role: "patient", // Default role
+    role: "patient",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -33,13 +37,23 @@ const SignUp = () => {
       return;
     }
 
-    // Add new user
-    users.push(formData);
+    // Generate unique ID
+    const uniqueId = generateUniqueId();
+    
+    // Add new user with unique ID and empty arrays for connected users
+    const newUser = {
+      ...formData,
+      userId: uniqueId,
+      connectedPatients: [],  // For caretakers
+      connectedCaretakers: [], // For patients
+    };
+    
+    users.push(newUser);
     localStorage.setItem("users", JSON.stringify(users));
     
     toast({
       title: "Success!",
-      description: "Account created successfully. Please log in.",
+      description: `Account created successfully. Your ${formData.role === 'patient' ? 'Patient' : 'Caretaker'} ID is: ${uniqueId}`,
     });
     
     navigate("/login");
