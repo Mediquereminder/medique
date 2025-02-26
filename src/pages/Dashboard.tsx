@@ -2,13 +2,14 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Bell, Pill, Calendar, LogOut, Menu } from "lucide-react";
+import { LogOut, Menu, Clock, CheckCircle, Timer } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { Card } from "@/components/ui/card";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
     if (!user.email) {
@@ -49,37 +50,49 @@ const Dashboard = () => {
             </SidebarTrigger>
           </nav>
 
-          {/* Add padding to account for fixed navbar */}
+          {/* Main Content */}
           <div className="pt-[73px]">
-            {/* Main Content */}
             <main className="container mx-auto px-4 py-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Upcoming Medications */}
-                <div className="glass-panel p-6 rounded-lg space-y-4">
-                  <div className="flex items-center text-primary">
-                    <Bell className="mr-2 h-5 w-5" />
-                    <h2 className="text-lg font-semibold">Upcoming Medications</h2>
+              <div className="flex justify-center items-center gap-6 min-h-[calc(100vh-150px)]">
+                {/* Previous Medication Card */}
+                <Card className="w-72 p-6 transform transition-all duration-300 hover:scale-105 hover:-rotate-6 bg-gradient-to-br from-gray-50 to-gray-100 shadow-xl">
+                  <div className="flex flex-col items-center gap-4">
+                    <CheckCircle className="w-12 h-12 text-green-500" />
+                    <h3 className="text-xl font-semibold">Last Taken</h3>
+                    <div className="text-center">
+                      <p className="text-lg font-medium text-primary">Aspirin</p>
+                      <p className="text-sm text-gray-500">2 hours ago</p>
+                      <p className="text-sm text-gray-500">1 tablet</p>
+                    </div>
                   </div>
-                  <p className="text-muted-foreground">No upcoming medications</p>
-                </div>
+                </Card>
 
-                {/* Current Medications */}
-                <div className="glass-panel p-6 rounded-lg space-y-4">
-                  <div className="flex items-center text-primary">
-                    <Pill className="mr-2 h-5 w-5" />
-                    <h2 className="text-lg font-semibold">Current Medications</h2>
+                {/* Current Medication Card */}
+                <Card className="w-80 p-8 transform transition-all duration-300 hover:scale-110 bg-gradient-to-br from-primary/20 to-secondary/20 shadow-2xl border-2 border-primary/20">
+                  <div className="flex flex-col items-center gap-4">
+                    <Timer className="w-16 h-16 text-primary animate-pulse" />
+                    <h3 className="text-2xl font-bold">Next Dose</h3>
+                    <div className="text-center">
+                      <p className="text-xl font-medium text-primary">Paracetamol</p>
+                      <p className="text-lg text-gray-600">In 30 minutes</p>
+                      <p className="text-lg text-gray-600">2 tablets</p>
+                    </div>
+                    <Button className="mt-4 w-full">Mark as Taken</Button>
                   </div>
-                  <p className="text-muted-foreground">No medications added yet</p>
-                </div>
+                </Card>
 
-                {/* Schedule */}
-                <div className="glass-panel p-6 rounded-lg space-y-4">
-                  <div className="flex items-center text-primary">
-                    <Calendar className="mr-2 h-5 w-5" />
-                    <h2 className="text-lg font-semibold">Schedule</h2>
+                {/* Upcoming Medication Card */}
+                <Card className="w-72 p-6 transform transition-all duration-300 hover:scale-105 hover:rotate-6 bg-gradient-to-br from-gray-50 to-gray-100 shadow-xl">
+                  <div className="flex flex-col items-center gap-4">
+                    <Clock className="w-12 h-12 text-blue-500" />
+                    <h3 className="text-xl font-semibold">Coming Up</h3>
+                    <div className="text-center">
+                      <p className="text-lg font-medium text-primary">Vitamin D</p>
+                      <p className="text-sm text-gray-500">In 3 hours</p>
+                      <p className="text-sm text-gray-500">1 capsule</p>
+                    </div>
                   </div>
-                  <p className="text-muted-foreground">No scheduled medications</p>
-                </div>
+                </Card>
               </div>
             </main>
           </div>
@@ -87,6 +100,6 @@ const Dashboard = () => {
       </div>
     </SidebarProvider>
   );
-}
+};
 
 export default Dashboard;
