@@ -1,21 +1,14 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Button } from "@/components/ui/button";
-import { LogOut, Menu } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Camera, Pencil, LogOut, Menu } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface UserProfile {
   name: string;
@@ -24,16 +17,12 @@ interface UserProfile {
   address: string;
   emergencyContact: string;
   profilePic: string;
-  role: "patient" | "caretaker";  // Added role to interface
 }
 
 const Profile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(() => {
-    return localStorage.getItem("sidebarState") === "true";
-  });
   const [profile, setProfile] = useState<UserProfile>({
     name: "",
     email: "",
@@ -41,12 +30,7 @@ const Profile = () => {
     address: "",
     emergencyContact: "",
     profilePic: "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=200&h=200&fit=crop",
-    role: "patient",  // Default role
   });
-
-  useEffect(() => {
-    localStorage.setItem("sidebarState", String(sidebarOpen));
-  }, [sidebarOpen]);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -65,16 +49,18 @@ const Profile = () => {
       address: user.address || "",
       emergencyContact: user.emergencyContact || "",
       profilePic: user.profilePic || prev.profilePic,
-      role: user.role || "patient",
     }));
   }, [navigate]);
 
-  const handleImageUpload = (e: any) => {
-    const file = e.target.files?.[0];
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setProfile((prev) => ({ ...prev, profilePic: reader.result as string }));
+        setProfile((prev) => ({
+          ...prev,
+          profilePic: reader.result as string,
+        }));
       };
       reader.readAsDataURL(file);
     }
@@ -88,6 +74,7 @@ const Profile = () => {
   const handleSave = () => {
     try {
       const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+      // Only save essential profile data
       const updatedUser = {
         ...currentUser,
         name: profile.name,
@@ -95,7 +82,7 @@ const Profile = () => {
         phone: profile.phone,
         address: profile.address,
         emergencyContact: profile.emergencyContact,
-        role: profile.role,
+        // Only save the profilePic if it's different from the default
         ...(profile.profilePic !== "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=200&h=200&fit=crop" && {
           profilePic: profile.profilePic,
         }),
@@ -119,10 +106,7 @@ const Profile = () => {
   };
 
   return (
-    <SidebarProvider 
-      defaultOpen={sidebarOpen} 
-      onOpenChange={(open) => setSidebarOpen(open)}
-    >
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full bg-muted/30">
         <AppSidebar role="patient" />
         <div className="flex-1">
@@ -148,127 +132,125 @@ const Profile = () => {
           <div className="pt-[73px]">
             <main className="container mx-auto px-4 py-8">
               <div className="flex flex-col items-center">
-                <div className="w-full max-w-2xl flex items-center justify-between mb-8">
-                  <h2 className="text-2xl font-bold text-primary">My Profile</h2>
-                  <div className="px-3 py-1 rounded-full bg-primary/10 text-primary font-medium">
-                    {profile.role === "patient" ? "Patient Account" : "Caretaker Account"}
-                  </div>
-                </div>
+                <h2 className="text-2xl font-bold text-primary mb-8">My Profile</h2>
 
                 <Card className="w-full max-w-2xl">
                   <CardHeader>
-                    <CardTitle>Profile Information</CardTitle>
-                    <CardDescription>
-                      View and manage your profile information here.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="grid gap-6">
-                    <div className="flex items-center space-x-4">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={profile.profilePic} alt="Profile Picture" />
-                        <AvatarFallback>
-                          {profile.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <Label htmlFor="picture">Profile Picture</Label>
-                        <Input
-                          id="picture"
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleImageUpload}
-                        />
+                    <div className="flex justify-between items-center">
+                      <CardTitle>Personal Information</CardTitle>
+                      {!isEditing && (
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() =>
-                            document.getElementById("picture")?.click()
-                          }
+                          onClick={() => setIsEditing(true)}
                         >
-                          Change
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Edit
                         </Button>
-                      </div>
+                      )}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="name">Name</Label>
-                        <Input
-                          type="text"
-                          id="name"
-                          value={profile.name}
-                          disabled={!isEditing}
-                          onChange={(e) =>
-                            setProfile((prev) => ({ ...prev, name: e.target.value }))
-                          }
-                        />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      {/* Profile Picture */}
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="relative">
+                          <img
+                            src={profile.profilePic}
+                            alt="Profile"
+                            className="w-32 h-32 rounded-full object-cover border-4 border-primary/20"
+                          />
+                          <label
+                            htmlFor="profile-pic"
+                            className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full cursor-pointer hover:bg-primary/90 transition-colors"
+                          >
+                            <Camera className="w-4 h-4" />
+                          </label>
+                          <input
+                            type="file"
+                            id="profile-pic"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            disabled={!isEditing}
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                          type="email"
-                          id="email"
-                          value={profile.email}
-                          disabled={!isEditing}
-                          onChange={(e) =>
-                            setProfile((prev) => ({ ...prev, email: e.target.value }))
-                          }
-                        />
+
+                      {/* Form Fields */}
+                      <div className="grid gap-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="name">Full Name</Label>
+                          <Input
+                            id="name"
+                            value={profile.name}
+                            onChange={(e) =>
+                              setProfile((prev) => ({ ...prev, name: e.target.value }))
+                            }
+                            disabled={!isEditing}
+                          />
+                        </div>
+
+                        <div className="grid gap-2">
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={profile.email}
+                            disabled
+                          />
+                        </div>
+
+                        <div className="grid gap-2">
+                          <Label htmlFor="phone">Phone Number</Label>
+                          <Input
+                            id="phone"
+                            value={profile.phone}
+                            onChange={(e) =>
+                              setProfile((prev) => ({ ...prev, phone: e.target.value }))
+                            }
+                            disabled={!isEditing}
+                          />
+                        </div>
+
+                        <div className="grid gap-2">
+                          <Label htmlFor="address">Address</Label>
+                          <Input
+                            id="address"
+                            value={profile.address}
+                            onChange={(e) =>
+                              setProfile((prev) => ({ ...prev, address: e.target.value }))
+                            }
+                            disabled={!isEditing}
+                          />
+                        </div>
+
+                        <div className="grid gap-2">
+                          <Label htmlFor="emergency">Emergency Contact</Label>
+                          <Input
+                            id="emergency"
+                            value={profile.emergencyContact}
+                            onChange={(e) =>
+                              setProfile((prev) => ({
+                                ...prev,
+                                emergencyContact: e.target.value,
+                              }))
+                            }
+                            disabled={!isEditing}
+                          />
+                        </div>
                       </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="phone">Phone Number</Label>
-                        <Input
-                          type="tel"
-                          id="phone"
-                          value={profile.phone}
-                          disabled={!isEditing}
-                          onChange={(e) =>
-                            setProfile((prev) => ({ ...prev, phone: e.target.value }))
-                          }
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="emergencyContact">Emergency Contact</Label>
-                        <Input
-                          type="tel"
-                          id="emergencyContact"
-                          value={profile.emergencyContact}
-                          disabled={!isEditing}
-                          onChange={(e) =>
-                            setProfile((prev) => ({
-                              ...prev,
-                              emergencyContact: e.target.value,
-                            }))
-                          }
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="address">Address</Label>
-                      <Textarea
-                        id="address"
-                        value={profile.address}
-                        disabled={!isEditing}
-                        onChange={(e) =>
-                          setProfile((prev) => ({ ...prev, address: e.target.value }))
-                        }
-                      />
-                    </div>
-                    <div className="flex justify-end">
-                      {isEditing ? (
-                        <div className="flex gap-2">
-                          <Button variant="ghost" onClick={() => setIsEditing(false)}>
+
+                      {isEditing && (
+                        <div className="flex justify-end gap-4 mt-6">
+                          <Button
+                            variant="outline"
+                            onClick={() => setIsEditing(false)}
+                          >
                             Cancel
                           </Button>
-                          <Button onClick={handleSave}>Save</Button>
+                          <Button onClick={handleSave}>Save Changes</Button>
                         </div>
-                      ) : (
-                        <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
                       )}
                     </div>
                   </CardContent>

@@ -1,21 +1,72 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { LogOut, Menu, Clock, CheckCircle, Timer } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { LogOut, Menu, Check, Clock, AlertCircle } from "lucide-react";
+import { Card } from "@/components/ui/card";
+
+// Sample medical facts
+const medicalFacts = [
+  "Taking medications at the same time each day helps build a routine and improves adherence.",
+  "Drinking enough water with medications helps them dissolve properly in your system.",
+  "Some medications are best taken with food to prevent stomach upset.",
+  "Regular exercise can help improve the effectiveness of many medications.",
+  "Always complete your prescribed course of antibiotics, even if you feel better.",
+  "Store your medications in a cool, dry place away from direct sunlight.",
+  "Never share your prescription medications with others, even if they have similar symptoms.",
+  "Keep a detailed record of any side effects to discuss with your healthcare provider.",
+];
+
+// Sample data - in a real app, this would come from an API
+const medications = [
+  {
+    id: 1,
+    name: "Aspirin",
+    time: "2 hours ago",
+    dosage: "1 tablet",
+    status: "taken",
+  },
+  {
+    id: 2,
+    name: "Vitamin C",
+    time: "1 hour ago",
+    dosage: "2 tablets",
+    status: "taken",
+  },
+  {
+    id: 3,
+    name: "Paracetamol",
+    time: "In 30 minutes",
+    dosage: "2 tablets",
+    status: "current",
+  },
+  {
+    id: 4,
+    name: "Vitamin D",
+    time: "In 3 hours",
+    dosage: "1 capsule",
+    status: "upcoming",
+  },
+  {
+    id: 5,
+    name: "Iron Supplement",
+    time: "In 5 hours",
+    dosage: "1 tablet",
+    status: "upcoming",
+  },
+  {
+    id: 6,
+    name: "Omega-3",
+    time: "In 8 hours",
+    dosage: "2 capsules",
+    status: "upcoming",
+  },
+];
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(() => {
-    return localStorage.getItem("sidebarState") === "true";
-  });
-
-  useEffect(() => {
-    localStorage.setItem("sidebarState", String(sidebarOpen));
-  }, [sidebarOpen]);
+  const [randomFact, setRandomFact] = useState("");
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -25,6 +76,9 @@ const Dashboard = () => {
     if (user.role === "admin") {
       navigate("/admin-dashboard");
     }
+    // Set a random medical fact
+    const randomIndex = Math.floor(Math.random() * medicalFacts.length);
+    setRandomFact(medicalFacts[randomIndex]);
   }, [navigate]);
 
   const handleLogout = () => {
@@ -32,55 +86,15 @@ const Dashboard = () => {
     navigate("/login");
   };
 
-  const medicationTimeline = [
-    {
-      title: "Taken Medications",
-      description: "Medications you've already taken today",
-      icon: Check,
-      color: "text-green-500",
-      bgColor: "bg-green-50",
-      medications: [
-        { name: "Aspirin", time: "8:00 AM", taken: true },
-        { name: "Vitamin D", time: "9:00 AM", taken: true },
-      ]
-    },
-    {
-      title: "To Take Now",
-      description: "Medications due at this time",
-      icon: Clock,
-      color: "text-blue-500",
-      bgColor: "bg-blue-50",
-      medications: [
-        { name: "Blood Pressure Medicine", time: "2:00 PM", taken: false },
-      ]
-    },
-    {
-      title: "Upcoming Medications",
-      description: "Medications scheduled for later today",
-      icon: AlertCircle,
-      color: "text-orange-500",
-      bgColor: "bg-orange-50",
-      medications: [
-        { name: "Evening Medicine", time: "7:00 PM", taken: false },
-        { name: "Night Medicine", time: "10:00 PM", taken: false },
-      ]
-    }
-  ];
-
   return (
-    <SidebarProvider 
-      defaultOpen={sidebarOpen}
-      onOpenChange={(open) => setSidebarOpen(open)}
-    >
+    <SidebarProvider>
       <div className="min-h-screen flex w-full bg-muted/30">
         <AppSidebar role="patient" />
         <div className="flex-1">
           <nav className="glass-panel fixed top-0 left-0 right-0 z-50">
             <div className="container mx-auto px-4 py-4 flex justify-between items-center">
               <div className="flex items-center gap-4">
-                <div className="text-2xl font-semibold text-primary ml-12">
-                  Medique
-                </div>
+                <div className="text-2xl font-semibold text-primary ml-12">Medique</div>
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="ghost" onClick={handleLogout}>
@@ -90,11 +104,7 @@ const Dashboard = () => {
               </div>
             </div>
             <SidebarTrigger className="absolute left-4 top-1/2 -translate-y-1/2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hover:text-[#0EA5E9] hover:bg-[#0EA5E9]/10"
-              >
+              <Button variant="ghost" size="icon" className="hover:text-[#0EA5E9] hover:bg-[#0EA5E9]/10">
                 <Menu className="h-5 w-5" />
               </Button>
             </SidebarTrigger>
@@ -102,44 +112,65 @@ const Dashboard = () => {
 
           <div className="pt-[73px]">
             <main className="container mx-auto px-4 py-8">
-              <h2 className="text-2xl font-bold mb-6">Today's Medication Timeline</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {medicationTimeline.map((section, index) => (
-                  <Card 
-                    key={index} 
-                    className={`${section.bgColor} border-none hover:shadow-lg transition-shadow duration-300`}
-                  >
-                    <CardHeader>
-                      <div className="flex items-center gap-3">
-                        <section.icon className={`w-8 h-8 ${section.color}`} />
-                        <div>
-                          <CardTitle className="text-lg">{section.title}</CardTitle>
-                          <CardDescription>{section.description}</CardDescription>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {section.medications.map((med, medIndex) => (
-                          <div 
-                            key={medIndex}
-                            className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm"
-                          >
-                            <div>
-                              <p className="font-medium">{med.name}</p>
-                              <p className="text-sm text-muted-foreground">{med.time}</p>
-                            </div>
-                            {med.taken ? (
-                              <Check className="h-5 w-5 text-green-500" />
-                            ) : (
-                              <Clock className="h-5 w-5 text-blue-500" />
-                            )}
+              <div className="flex flex-col items-center">
+                <h2 className="text-2xl font-bold text-primary mb-8">Medication Timeline</h2>
+                
+                {/* 3D Timeline Row */}
+                <div className="w-full overflow-x-auto perspective-[2000px] py-20 scrollbar-none">
+                  <div className="flex gap-4 justify-center min-w-max">
+                    {medications.slice(1, 4).map((med, index) => (
+                      <Card
+                        key={med.id}
+                        className={`
+                          transform-style-3d transition-all duration-500
+                          w-72 shrink-0 p-6
+                          ${index === 0 ? 'opacity-50 scale-75 -translate-x-1/4 translate-z-[-400px]' : ''}
+                          ${index === 1 ? 'opacity-100 scale-100 translate-z-0 z-10' : ''}
+                          ${index === 2 ? 'opacity-50 scale-75 translate-x-1/4 translate-z-[-400px]' : ''}
+                          ${
+                            med.status === "current"
+                              ? "bg-gradient-to-br from-primary/20 to-secondary/20 shadow-2xl border-2 border-primary/20"
+                              : "bg-gradient-to-br from-gray-50 to-gray-100 shadow-xl"
+                          }
+                        `}
+                      >
+                        <div className="flex flex-col items-center gap-4">
+                          {med.status === "taken" && <CheckCircle className="w-12 h-12 text-green-500" />}
+                          {med.status === "current" && <Timer className="w-16 h-16 text-primary animate-pulse" />}
+                          {med.status === "upcoming" && <Clock className="w-12 h-12 text-blue-500" />}
+                          
+                          <h3 className={`${med.status === "current" ? "text-2xl font-bold" : "text-xl font-semibold"}`}>
+                            {med.status === "taken" ? "Taken" : med.status === "current" ? "Next Dose" : "Upcoming"}
+                          </h3>
+                          
+                          <div className="text-center">
+                            <p className={`${med.status === "current" ? "text-xl" : "text-lg"} font-medium text-primary`}>
+                              {med.name}
+                            </p>
+                            <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-gray-500`}>
+                              {med.time}
+                            </p>
+                            <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-gray-500`}>
+                              {med.dosage}
+                            </p>
                           </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                          
+                          {med.status === "current" && (
+                            <Button className="mt-4 w-full">Mark as Taken</Button>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Medical Fact Section */}
+                <div className="mt-12 text-center max-w-2xl">
+                  <div className="bg-primary/5 rounded-lg p-6 shadow-sm border border-primary/10">
+                    <h3 className="text-lg font-semibold text-primary mb-2">💡 Did you know?</h3>
+                    <p className="text-gray-700">{randomFact}</p>
+                  </div>
+                </div>
               </div>
             </main>
           </div>
