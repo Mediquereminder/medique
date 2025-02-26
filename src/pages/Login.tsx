@@ -6,37 +6,50 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    // Get users from localStorage
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const user = users.find((u: any) => u.email === email && u.password === password);
-
-    if (user) {
-      // Store logged in user info
-      localStorage.setItem("currentUser", JSON.stringify(user));
-      
-      toast({
-        title: "Welcome back!",
-        description: "Login successful.",
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      // Redirect based on role
-      navigate(user.role === "admin" ? "/admin-dashboard" : "/dashboard");
-    } else {
+      if (error) throw error;
+
+      if (data.user) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single();
+
+        toast({
+          title: "Welcome back!",
+          description: "Login successful.",
+        });
+
+        // Redirect based on role
+        navigate(profileData?.role === "admin" ? "/admin-dashboard" : "/dashboard");
+      }
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Invalid email or password.",
+        description: error.message || "Failed to login. Please try again.",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -109,8 +122,8 @@ const Login = () => {
               </Link>
             </div>
 
-            <Button type="submit" className="w-full">
-              Sign in
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Signing in..." : "Sign in"}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
