@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -101,20 +100,20 @@ const Dashboard = () => {
                 <h2 className="text-2xl font-bold text-primary mb-8">Medication Timeline</h2>
                 
                 {/* 3D Timeline Row */}
-                <div className="w-full overflow-x-auto perspective-[2000px] py-20 scrollbar-hide">
-                  <div className="flex gap-2 px-[40%] min-w-max">
+                <div className="w-full overflow-x-auto perspective-[2000px] py-20 scrollbar-none">
+                  <div className="flex gap-0.5 justify-center min-w-max">
                     {medications.map((med, index) => (
                       <Card
                         key={med.id}
                         className={`
                           transform-style-3d transition-all duration-500
                           w-72 shrink-0 p-6
-                          ${index === 0 ? 'opacity-30 scale-50 -translate-x-1/2 translate-z-[-600px]' : ''}
-                          ${index === 1 ? 'opacity-50 scale-75 -translate-x-1/4 translate-z-[-400px]' : ''}
+                          ${index === 0 ? 'opacity-20 scale-50 -translate-x-1/3 translate-z-[-600px]' : ''}
+                          ${index === 1 ? 'opacity-40 scale-75 -translate-x-1/6 translate-z-[-400px]' : ''}
                           ${index === 2 ? 'opacity-100 scale-100 translate-z-0 z-10' : ''}
-                          ${index === 3 ? 'opacity-50 scale-75 translate-x-1/4 translate-z-[-400px]' : ''}
-                          ${index === 4 ? 'opacity-30 scale-50 translate-x-1/2 translate-z-[-600px]' : ''}
-                          ${index >= 5 ? 'opacity-0 scale-25 translate-x-full translate-z-[-800px]' : ''}
+                          ${index === 3 ? 'opacity-40 scale-75 translate-x-1/6 translate-z-[-400px]' : ''}
+                          ${index === 4 ? 'opacity-20 scale-50 translate-x-1/3 translate-z-[-600px]' : ''}
+                          ${index >= 5 ? 'opacity-0 scale-25 translate-x-1/2 translate-z-[-800px]' : ''}
                           ${
                             med.status === "current"
                               ? "bg-gradient-to-br from-primary/20 to-secondary/20 shadow-2xl border-2 border-primary/20"
@@ -151,16 +150,6 @@ const Dashboard = () => {
                     ))}
                   </div>
                 </div>
-
-                <style jsx global>{`
-                  .scrollbar-hide {
-                    -ms-overflow-style: none;
-                    scrollbar-width: none;
-                  }
-                  .scrollbar-hide::-webkit-scrollbar {
-                    display: none;
-                  }
-                `}</style>
               </div>
             </main>
           </div>
