@@ -29,7 +29,7 @@ const Profile = () => {
     phone: "",
     address: "",
     emergencyContact: "",
-    profilePic: "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=200&h=200&fit=crop",
+    profilePic: "https://unsplash.com/photos/a-cartoon-character-with-a-weird-haircut-G2Qjx1y9aAM",
   });
   const [userRole, setUserRole] = useState<'patient' | 'admin'>('patient');
   const [patientId, setPatientId] = useState("");
