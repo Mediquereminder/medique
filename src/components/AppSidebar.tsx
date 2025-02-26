@@ -10,17 +10,19 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Home, Package, UserCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { Button } from "./ui/button";
 
 interface AppSidebarProps {
   role: "admin" | "patient";
 }
 
 export function AppSidebar({ role }: AppSidebarProps) {
+  const navigate = useNavigate();
   const basePath = role === "admin" ? "/admin-dashboard" : "/dashboard";
-  
+
   return (
-    <Sidebar>
+    <Sidebar className="top-[73px] border-t">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
@@ -28,26 +30,38 @@ export function AppSidebar({ role }: AppSidebarProps) {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Link to={basePath}>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start" 
+                    onClick={() => navigate(basePath)}
+                  >
                     <Home className="h-4 w-4" />
                     <span>Home</span>
-                  </Link>
+                  </Button>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Link to={`${basePath}/stock`}>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start"
+                    onClick={() => navigate(`${basePath}/stock`)}
+                  >
                     <Package className="h-4 w-4" />
                     <span>Stock</span>
-                  </Link>
+                  </Button>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Link to={`${basePath}/profile`}>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start"
+                    onClick={() => navigate(`${basePath}/profile`)}
+                  >
                     <UserCircle className="h-4 w-4" />
                     <span>Profile</span>
-                  </Link>
+                  </Button>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
