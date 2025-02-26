@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, Menu, Clock, CheckCircle, Timer } from "lucide-react";
@@ -54,6 +55,7 @@ const medications = [
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -63,6 +65,7 @@ const Dashboard = () => {
     if (user.role === "admin") {
       navigate("/admin-dashboard");
     }
+    setUserName(user.name || "");
   }, [navigate]);
 
   const handleLogout = () => {
@@ -146,6 +149,17 @@ const Dashboard = () => {
                       </Card>
                     ))}
                   </div>
+                </div>
+
+                {/* Greeting Section */}
+                <div className="mt-12 text-center">
+                  <p className="text-xl text-gray-700">
+                    Welcome back, <span className="font-semibold text-primary">{userName}</span>!
+                  </p>
+                  <p className="mt-2 text-gray-600">
+                    We're here to help you stay on track with your medications.
+                    Remember to take them as prescribed for the best results.
+                  </p>
                 </div>
               </div>
             </main>
