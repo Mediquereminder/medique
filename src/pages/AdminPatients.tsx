@@ -6,7 +6,15 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Menu, UserPlus, AlertCircle } from "lucide-react";
+import { Menu, UserPlus, AlertCircle, UserX } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
 interface Patient {
@@ -20,6 +28,7 @@ const AdminPatients = () => {
   const { toast } = useToast();
   const [newPatientId, setNewPatientId] = useState("");
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [patientToRemove, setPatientToRemove] = useState<Patient | null>(null);
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -36,7 +45,7 @@ const AdminPatients = () => {
       .map((patientId: string) => {
         return users.find((user: any) => user.userId === patientId && user.role === "patient");
       })
-      .filter(Boolean); // Remove any undefined values
+      .filter(Boolean);
 
     setPatients(connectedPatients);
   }, [navigate]);
@@ -113,6 +122,55 @@ const AdminPatients = () => {
     setNewPatientId("");
   };
 
+  const handleRemovePatient = () => {
+    if (!patientToRemove) return;
+
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+
+    // Remove patient from caretaker's connected patients
+    const updatedUsers = users.map((user: any) => {
+      if (user.email === currentUser.email) {
+        return {
+          ...user,
+          connectedPatients: (user.connectedPatients || []).filter(
+            (id: string) => id !== patientToRemove.userId
+          ),
+        };
+      }
+      if (user.userId === patientToRemove.userId) {
+        return {
+          ...user,
+          connectedCaretakers: (user.connectedCaretakers || []).filter(
+            (id: string) => id !== currentUser.userId
+          ),
+        };
+      }
+      return user;
+    });
+
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
+
+    // Update current user in localStorage
+    const updatedCurrentUser = {
+      ...currentUser,
+      connectedPatients: (currentUser.connectedPatients || []).filter(
+        (id: string) => id !== patientToRemove.userId
+      ),
+    };
+    localStorage.setItem("currentUser", JSON.stringify(updatedCurrentUser));
+
+    // Update the patients list in state
+    setPatients(patients.filter((p) => p.userId !== patientToRemove.userId));
+
+    toast({
+      title: "Success",
+      description: "Patient removed successfully",
+    });
+
+    setPatientToRemove(null);
+  };
+
   return (
     <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full bg-muted/30">
@@ -173,13 +231,22 @@ const AdminPatients = () => {
                             <p className="text-sm text-muted-foreground">{patient.email}</p>
                             <p className="text-xs text-muted-foreground mt-1">ID: {patient.userId}</p>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => navigate(`/admin-dashboard/patients/${patient.userId}`)}
-                          >
-                            View Details
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => navigate(`/admin-dashboard/patients/${patient.userId}`)}
+                            >
+                              View Details
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => setPatientToRemove(patient)}
+                            >
+                              <UserX className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -190,6 +257,25 @@ const AdminPatients = () => {
           </div>
         </div>
       </div>
+
+      <Dialog open={!!patientToRemove} onOpenChange={() => setPatientToRemove(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove Patient</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove {patientToRemove?.name} from your connected patients? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPatientToRemove(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleRemovePatient}>
+              Remove
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };
