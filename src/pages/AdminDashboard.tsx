@@ -1,9 +1,11 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Package, Users, AlertTriangle, LogOut, Menu } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -25,14 +27,16 @@ const AdminDashboard = () => {
 
   return (
     <SidebarProvider defaultOpen={false}>
-      <div className="min-h-screen flex w-full bg-muted/30">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <AppSidebar role="admin" />
         <div className="flex-1">
-          {/* Navigation */}
-          <nav className="glass-panel fixed top-0 left-0 right-0 z-50">
+          <nav className="glass-panel fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-white/80">
             <div className="container mx-auto px-4 py-4 flex justify-between items-center">
               <div className="flex items-center gap-4">
-                <div className="text-2xl font-semibold text-primary ml-12">Medique Admin</div>
+                <div className="text-2xl font-semibold text-primary ml-12 flex items-center gap-2">
+                  <Package className="w-6 h-6" />
+                  Medique Admin
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="ghost" onClick={handleLogout}>
@@ -48,37 +52,90 @@ const AdminDashboard = () => {
             </SidebarTrigger>
           </nav>
 
-          {/* Add padding to account for fixed navbar */}
           <div className="pt-[73px]">
-            {/* Main Content */}
             <main className="container mx-auto px-4 py-8">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Medicine Stock */}
-                <div className="glass-panel p-6 rounded-lg space-y-4">
-                  <div className="flex items-center text-primary">
-                    <Package className="mr-2 h-5 w-5" />
-                    <h2 className="text-lg font-semibold">Medicine Stock</h2>
-                  </div>
-                  <p className="text-muted-foreground">No medicines in stock</p>
-                </div>
+                {/* Medicine Stock Card */}
+                <Card className="border-2 border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="w-5 h-5 text-primary" />
+                      Medicine Stock
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="text-4xl font-bold text-primary">0</div>
+                      <p className="text-muted-foreground">Total medicines in stock</p>
+                    </div>
+                  </CardContent>
+                </Card>
 
-                {/* Patient List */}
-                <div className="glass-panel p-6 rounded-lg space-y-4">
-                  <div className="flex items-center text-primary">
-                    <Users className="mr-2 h-5 w-5" />
-                    <h2 className="text-lg font-semibold">Patients</h2>
-                  </div>
-                  <p className="text-muted-foreground">No patients registered</p>
-                </div>
+                {/* Patient List Card */}
+                <Card className="border-2 border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="w-5 h-5 text-primary" />
+                      Patients
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="text-4xl font-bold text-primary">0</div>
+                      <p className="text-muted-foreground">Registered patients</p>
+                    </div>
+                  </CardContent>
+                </Card>
 
-                {/* Low Stock Alerts */}
-                <div className="glass-panel p-6 rounded-lg space-y-4">
-                  <div className="flex items-center text-primary">
-                    <AlertTriangle className="mr-2 h-5 w-5" />
-                    <h2 className="text-lg font-semibold">Low Stock Alerts</h2>
-                  </div>
-                  <p className="text-muted-foreground">No alerts</p>
-                </div>
+                {/* Low Stock Alerts Card */}
+                <Card className="border-2 border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5 text-primary" />
+                      Low Stock Alerts
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="text-4xl font-bold text-primary">0</div>
+                      <p className="text-muted-foreground">Items below threshold</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Improved Quick Actions Section */}
+                <Card className="md:col-span-3 border-2 border-primary/20 shadow-lg">
+                  <CardHeader>
+                    <CardTitle>Quick Actions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Button 
+                        className="w-full transform hover:scale-105 transition-transform duration-200"
+                        onClick={() => navigate("/admin-dashboard/stock")}
+                      >
+                        <Package className="mr-2 h-4 w-4" />
+                        Manage Stock
+                      </Button>
+                      <Button 
+                        className="w-full transform hover:scale-105 transition-transform duration-200"
+                        variant="secondary"
+                        onClick={() => navigate("/admin-dashboard/patients")}
+                      >
+                        <Users className="mr-2 h-4 w-4" />
+                        View Patients
+                      </Button>
+                      <Button 
+                        className="w-full transform hover:scale-105 transition-transform duration-200"
+                        variant="outline"
+                        onClick={() => navigate("/admin-dashboard/alerts")}
+                      >
+                        <AlertTriangle className="mr-2 h-4 w-4" />
+                        Check Alerts
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </main>
           </div>
@@ -86,6 +143,7 @@ const AdminDashboard = () => {
       </div>
     </SidebarProvider>
   );
-}
+};
 
 export default AdminDashboard;
+
