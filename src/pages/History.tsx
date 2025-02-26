@@ -40,15 +40,14 @@ const History = () => {
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [dayMedications, setDayMedications] = useState<{ [key: string]: boolean }>({});
+  const [userRole, setUserRole] = useState<'patient' | 'admin'>('patient');
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
     if (!user.email) {
       navigate("/login");
     }
-    if (user.role === "admin") {
-      navigate("/admin-dashboard");
-    }
+    setUserRole(user.role || 'patient');
   }, [navigate]);
 
   useEffect(() => {
@@ -73,12 +72,16 @@ const History = () => {
     navigate("/login");
   };
 
+  const getBaseUrl = () => {
+    return userRole === 'admin' ? '/admin-dashboard' : '/dashboard';
+  };
+
   return (
     <SidebarProvider defaultOpen={false}>
-      <div className="min-h-screen flex w-full bg-muted/30">
-        <AppSidebar role="patient" />
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <AppSidebar role={userRole} />
         <div className="flex-1">
-          <nav className="glass-panel fixed top-0 left-0 right-0 z-50">
+          <nav className="glass-panel fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-white/80">
             <div className="container mx-auto px-4 py-4 flex justify-between items-center">
               <div className="flex items-center gap-4">
                 <div className="text-2xl font-semibold text-primary ml-12">Medique</div>
@@ -101,7 +104,7 @@ const History = () => {
             <main className="container mx-auto px-4 py-8">
               <div className="grid gap-6 md:grid-cols-2">
                 {/* Calendar Section */}
-                <Card className="md:col-span-1">
+                <Card className="md:col-span-1 border-2 border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300">
                   <CardHeader>
                     <CardTitle>Select Date</CardTitle>
                   </CardHeader>
@@ -117,7 +120,7 @@ const History = () => {
 
                 {/* Daily Medications Section */}
                 {selectedDate && (
-                  <Card className="md:col-span-1">
+                  <Card className="md:col-span-1 border-2 border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300">
                     <CardHeader>
                       <CardTitle>
                         Medications for {selectedDate.toLocaleDateString()}
@@ -128,7 +131,7 @@ const History = () => {
                         {Object.entries(dayMedications).map(([medication, taken]) => (
                           <div
                             key={medication}
-                            className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm border"
+                            className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border-2 border-primary/20 hover:border-primary/40 transition-colors"
                           >
                             <div className="flex items-center gap-3">
                               <div
@@ -145,13 +148,18 @@ const History = () => {
                             )}
                           </div>
                         ))}
+                        {Object.keys(dayMedications).length === 0 && (
+                          <div className="text-center py-8 text-muted-foreground">
+                            No medications recorded for this date
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
                 )}
 
                 {/* Compliance Chart */}
-                <Card className="md:col-span-2">
+                <Card className="md:col-span-2 border-2 border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300">
                   <CardHeader>
                     <CardTitle>Medication Compliance</CardTitle>
                   </CardHeader>
