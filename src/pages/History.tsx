@@ -5,14 +5,24 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, X, LogOut, Menu } from "lucide-react";
+import { Check, X, LogOut, Menu, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
-// Sample medication history data (replace with actual data fetching)
+// Sample medication history data
 const medicationHistory = {
   "2024-08-01": {
     "Aspirin": true,
     "Vitamin C": true,
+    "Paracetamol": false,
   },
   "2024-08-02": {
     "Aspirin": true,
@@ -22,6 +32,7 @@ const medicationHistory = {
   "2024-08-03": {
     "Aspirin": false,
     "Vitamin C": true,
+    "Paracetamol": true,
   },
 };
 
@@ -46,6 +57,16 @@ const History = () => {
       setDayMedications(medicationHistory[dateStr] || {});
     }
   }, [selectedDate]);
+
+  // Calculate compliance data for chart
+  const complianceData = Object.entries(medicationHistory).map(([date, meds]) => {
+    const total = Object.keys(meds).length;
+    const taken = Object.values(meds).filter(Boolean).length;
+    return {
+      date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      compliance: (taken / total) * 100,
+    };
+  });
 
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
@@ -78,14 +99,13 @@ const History = () => {
 
           <div className="pt-[73px]">
             <main className="container mx-auto px-4 py-8">
-              <div className="flex flex-col items-center">
-                <h2 className="text-2xl font-bold text-primary mb-8">Medication History</h2>
-
-                <Card className="w-full max-w-2xl">
+              <div className="grid gap-6 md:grid-cols-2">
+                {/* Calendar Section */}
+                <Card className="md:col-span-1">
                   <CardHeader>
                     <CardTitle>Select Date</CardTitle>
                   </CardHeader>
-                  <CardContent className="grid gap-4">
+                  <CardContent>
                     <Calendar
                       mode="single"
                       selected={selectedDate}
@@ -95,29 +115,64 @@ const History = () => {
                   </CardContent>
                 </Card>
 
+                {/* Daily Medications Section */}
                 {selectedDate && (
-                  <div className="mt-8 w-full max-w-2xl">
-                    <h3 className="text-xl font-semibold text-primary mb-4">
-                      Medications Taken on {selectedDate.toLocaleDateString()}
-                    </h3>
-                    <Card>
-                      <CardContent>
-                        <ul className="space-y-2">
-                          {Object.entries(dayMedications).map(([medication, taken]) => (
-                            <li key={medication} className="flex items-center justify-between">
-                              <span>{medication}</span>
-                              {taken ? (
-                                <Check className="w-6 h-6 text-green-500" />
-                              ) : (
-                                <X className="w-6 h-6 text-red-500" />
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      </CardContent>
-                    </Card>
-                  </div>
+                  <Card className="md:col-span-1">
+                    <CardHeader>
+                      <CardTitle>
+                        Medications for {selectedDate.toLocaleDateString()}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {Object.entries(dayMedications).map(([medication, taken]) => (
+                          <div
+                            key={medication}
+                            className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm border"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`w-2 h-2 rounded-full ${
+                                  taken ? "bg-green-500" : "bg-red-500"
+                                }`}
+                              />
+                              <span className="font-medium">{medication}</span>
+                            </div>
+                            {taken ? (
+                              <Check className="w-5 h-5 text-green-500" />
+                            ) : (
+                              <X className="w-5 h-5 text-red-500" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
+
+                {/* Compliance Chart */}
+                <Card className="md:col-span-2">
+                  <CardHeader>
+                    <CardTitle>Medication Compliance</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[300px] mt-4">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={complianceData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="date" />
+                          <YAxis unit="%" />
+                          <Tooltip />
+                          <Bar
+                            dataKey="compliance"
+                            fill="#4FD1C5"
+                            radius={[4, 4, 0, 0]}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </main>
           </div>
