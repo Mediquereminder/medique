@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Camera, Pencil, Save } from "lucide-react";
+import { Camera, Pencil, Save, LogOut } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 interface UserProfile {
@@ -62,6 +62,11 @@ const Profile = () => {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("currentUser");
+    navigate("/login");
+  };
+
   const handleSave = () => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
     const updatedUser = { ...currentUser, ...profile };
@@ -76,10 +81,24 @@ const Profile = () => {
   };
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full bg-muted/30">
         <AppSidebar role="patient" />
         <div className="flex-1">
+          <nav className="glass-panel fixed top-0 left-0 right-0 z-50">
+            <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                <div className="text-2xl font-semibold text-primary ml-12">Medique</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </Button>
+              </div>
+            </div>
+          </nav>
+
           <div className="pt-[73px]">
             <main className="container mx-auto px-4 py-8">
               <div className="flex flex-col items-center">
@@ -89,23 +108,16 @@ const Profile = () => {
                   <CardHeader>
                     <div className="flex justify-between items-center">
                       <CardTitle>Personal Information</CardTitle>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsEditing(!isEditing)}
-                      >
-                        {isEditing ? (
-                          <>
-                            <Save className="w-4 h-4 mr-2" />
-                            Save
-                          </>
-                        ) : (
-                          <>
-                            <Pencil className="w-4 h-4 mr-2" />
-                            Edit
-                          </>
-                        )}
-                      </Button>
+                      {!isEditing && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsEditing(true)}
+                        >
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Edit
+                        </Button>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent>
