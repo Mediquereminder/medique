@@ -29,18 +29,18 @@ export const StockCard = ({
       isLowStock ? "border-2 border-[#ea384c]" : "border-2 border-primary/20"
     }`}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-lg font-semibold">{name}</CardTitle>
         <div className="flex items-center gap-2">
           <Package className="h-5 w-5 text-primary" />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-destructive hover:text-destructive/90"
-            onClick={() => onDelete(id)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <CardTitle className="text-lg font-semibold">{name}</CardTitle>
         </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-destructive hover:text-destructive/90"
+          onClick={() => onDelete(id)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
