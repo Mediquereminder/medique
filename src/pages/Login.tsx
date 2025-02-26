@@ -1,94 +1,42 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Check if user is already logged in - but don't block the form rendering
-  useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          // Fetch user role and redirect accordingly
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profileData?.role === "admin") {
-            navigate("/admin-dashboard");
-          } else {
-            navigate("/dashboard");
-          }
-        }
-      } catch (error) {
-        console.error("Session check error:", error);
-      }
-    };
-
-    checkUser();
-  }, [navigate]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+    // Get users from localStorage
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const user = users.find((u: any) => u.email === email && u.password === password);
+
+    if (user) {
+      // Store logged in user info
+      localStorage.setItem("currentUser", JSON.stringify(user));
+      
+      toast({
+        title: "Welcome back!",
+        description: "Login successful.",
       });
 
-      if (error) throw error;
-
-      if (data.user) {
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .single();
-
-        if (profileError) {
-          console.error("Profile fetch error:", profileError);
-          throw new Error("Failed to fetch user profile");
-        }
-
-        toast({
-          title: "Welcome back!",
-          description: "Login successful.",
-        });
-
-        // Redirect based on role with a slight delay to ensure toast is shown
-        setTimeout(() => {
-          if (profileData?.role === "admin") {
-            navigate("/admin-dashboard");
-          } else {
-            navigate("/dashboard");
-          }
-        }, 500);
-      }
-    } catch (error: any) {
-      console.error("Login error:", error);
+      // Redirect based on role
+      navigate(user.role === "admin" ? "/admin-dashboard" : "/dashboard");
+    } else {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to login. Please try again.",
+        description: "Invalid email or password.",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -127,7 +75,6 @@ const Login = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    autoComplete="email"
                   />
                 </div>
               </div>
@@ -144,7 +91,6 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    autoComplete="current-password"
                   />
                 </div>
               </div>
@@ -163,8 +109,8 @@ const Login = () => {
               </Link>
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign in"}
+            <Button type="submit" className="w-full">
+              Sign in
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">

@@ -6,12 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Mail, Lock, User } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+
+const generateUniqueId = () => {
+  return Math.random().toString(36).substr(2, 9).toUpperCase();
+};
 
 const SignUp = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -19,41 +21,42 @@ const SignUp = () => {
     role: "patient",
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     
-    try {
-      const { data: { user }, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            name: formData.name,
-            role: formData.role,
-          }
-        }
-      });
-
-      if (error) throw error;
-
-      if (user) {
-        toast({
-          title: "Success!",
-          description: "Account created successfully. You can now log in.",
-        });
-        
-        navigate("/login");
-      }
-    } catch (error: any) {
+    // Store user data in localStorage
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    
+    // Check if email already exists
+    if (users.some((user: any) => user.email === formData.email)) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to create account. Please try again.",
+        description: "Email already exists. Please use a different email.",
       });
-    } finally {
-      setIsLoading(false);
+      return;
     }
+
+    // Generate unique ID
+    const uniqueId = generateUniqueId();
+    
+    // Add new user with unique ID and empty arrays for connected users
+    const newUser = {
+      ...formData,
+      userId: uniqueId,
+      connectedPatients: [],  // For caretakers
+      connectedCaretakers: [], // For patients
+    };
+    
+    users.push(newUser);
+    localStorage.setItem("users", JSON.stringify(users));
+    
+    toast({
+      title: "Success!",
+      description: `Account created successfully. Your ${formData.role === 'patient' ? 'Patient' : 'Caretaker'} ID is: ${uniqueId}`,
+    });
+    
+    navigate("/login");
   };
 
   return (
@@ -162,8 +165,8 @@ const SignUp = () => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Creating Account..." : "Create Account"}
+            <Button type="submit" className="w-full">
+              Create Account
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
