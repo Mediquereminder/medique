@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -40,6 +39,13 @@ const History = () => {
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [dayMedications, setDayMedications] = useState<{ [key: string]: boolean }>({});
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    return localStorage.getItem("sidebarState") === "true";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("sidebarState", String(sidebarOpen));
+  }, [sidebarOpen]);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -74,7 +80,10 @@ const History = () => {
   };
 
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider 
+      defaultOpen={sidebarOpen} 
+      onOpenChange={(open) => setSidebarOpen(open)}
+    >
       <div className="min-h-screen flex w-full bg-muted/30">
         <AppSidebar role="patient" />
         <div className="flex-1">
