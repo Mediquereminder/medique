@@ -97,52 +97,59 @@ const Dashboard = () => {
 
           <div className="pt-[73px]">
             <main className="container mx-auto px-4 py-8">
-              <div className="flex flex-col items-center gap-8">
-                <h2 className="text-2xl font-bold text-primary mb-4">Medication Timeline</h2>
+              <div className="flex flex-col items-center">
+                <h2 className="text-2xl font-bold text-primary mb-8">Medication Timeline</h2>
                 
-                {/* Timeline Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-7xl">
-                  {medications.map((med) => (
-                    <Card
-                      key={med.id}
-                      className={`
-                        transform transition-all duration-300 p-6
-                        ${
-                          med.status === "current"
-                            ? "hover:scale-110 bg-gradient-to-br from-primary/20 to-secondary/20 shadow-2xl border-2 border-primary/20"
-                            : med.status === "taken"
-                            ? "hover:scale-105 hover:-rotate-3 bg-gradient-to-br from-gray-50 to-gray-100 shadow-xl"
-                            : "hover:scale-105 hover:rotate-3 bg-gradient-to-br from-gray-50 to-gray-100 shadow-xl"
-                        }
-                      `}
-                    >
-                      <div className="flex flex-col items-center gap-4">
-                        {med.status === "taken" && <CheckCircle className="w-12 h-12 text-green-500" />}
-                        {med.status === "current" && <Timer className="w-16 h-16 text-primary animate-pulse" />}
-                        {med.status === "upcoming" && <Clock className="w-12 h-12 text-blue-500" />}
-                        
-                        <h3 className={`${med.status === "current" ? "text-2xl font-bold" : "text-xl font-semibold"}`}>
-                          {med.status === "taken" ? "Taken" : med.status === "current" ? "Next Dose" : "Upcoming"}
-                        </h3>
-                        
-                        <div className="text-center">
-                          <p className={`${med.status === "current" ? "text-xl" : "text-lg"} font-medium text-primary`}>
-                            {med.name}
-                          </p>
-                          <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-gray-500`}>
-                            {med.time}
-                          </p>
-                          <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-gray-500`}>
-                            {med.dosage}
-                          </p>
+                {/* 3D Timeline Row */}
+                <div className="w-full overflow-x-auto perspective-[2000px] py-20">
+                  <div className="flex gap-4 px-[40%] min-w-max">
+                    {medications.map((med, index) => (
+                      <Card
+                        key={med.id}
+                        className={`
+                          transform-style-3d transition-all duration-500
+                          w-72 shrink-0 p-6
+                          ${index === 0 ? 'opacity-30 scale-50 -translate-x-1/2 translate-z-[-600px]' : ''}
+                          ${index === 1 ? 'opacity-50 scale-75 -translate-x-1/4 translate-z-[-400px]' : ''}
+                          ${index === 2 ? 'opacity-100 scale-100 translate-z-0 z-10' : ''}
+                          ${index === 3 ? 'opacity-50 scale-75 translate-x-1/4 translate-z-[-400px]' : ''}
+                          ${index === 4 ? 'opacity-30 scale-50 translate-x-1/2 translate-z-[-600px]' : ''}
+                          ${index >= 5 ? 'opacity-0 scale-25 translate-x-full translate-z-[-800px]' : ''}
+                          ${
+                            med.status === "current"
+                              ? "bg-gradient-to-br from-primary/20 to-secondary/20 shadow-2xl border-2 border-primary/20"
+                              : "bg-gradient-to-br from-gray-50 to-gray-100 shadow-xl"
+                          }
+                        `}
+                      >
+                        <div className="flex flex-col items-center gap-4">
+                          {med.status === "taken" && <CheckCircle className="w-12 h-12 text-green-500" />}
+                          {med.status === "current" && <Timer className="w-16 h-16 text-primary animate-pulse" />}
+                          {med.status === "upcoming" && <Clock className="w-12 h-12 text-blue-500" />}
+                          
+                          <h3 className={`${med.status === "current" ? "text-2xl font-bold" : "text-xl font-semibold"}`}>
+                            {med.status === "taken" ? "Taken" : med.status === "current" ? "Next Dose" : "Upcoming"}
+                          </h3>
+                          
+                          <div className="text-center">
+                            <p className={`${med.status === "current" ? "text-xl" : "text-lg"} font-medium text-primary`}>
+                              {med.name}
+                            </p>
+                            <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-gray-500`}>
+                              {med.time}
+                            </p>
+                            <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-gray-500`}>
+                              {med.dosage}
+                            </p>
+                          </div>
+                          
+                          {med.status === "current" && (
+                            <Button className="mt-4 w-full">Mark as Taken</Button>
+                          )}
                         </div>
-                        
-                        {med.status === "current" && (
-                          <Button className="mt-4 w-full">Mark as Taken</Button>
-                        )}
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    ))}
+                  </div>
                 </div>
               </div>
             </main>
