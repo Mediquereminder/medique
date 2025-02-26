@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,18 @@ import { LogOut, Menu, Clock, CheckCircle, Timer } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Card } from "@/components/ui/card";
+
+// Sample medical facts
+const medicalFacts = [
+  "Taking medications at the same time each day helps build a routine and improves adherence.",
+  "Drinking enough water with medications helps them dissolve properly in your system.",
+  "Some medications are best taken with food to prevent stomach upset.",
+  "Regular exercise can help improve the effectiveness of many medications.",
+  "Always complete your prescribed course of antibiotics, even if you feel better.",
+  "Store your medications in a cool, dry place away from direct sunlight.",
+  "Never share your prescription medications with others, even if they have similar symptoms.",
+  "Keep a detailed record of any side effects to discuss with your healthcare provider.",
+];
 
 // Sample data - in a real app, this would come from an API
 const medications = [
@@ -55,7 +66,7 @@ const medications = [
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [userName, setUserName] = useState("");
+  const [randomFact, setRandomFact] = useState("");
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -65,7 +76,9 @@ const Dashboard = () => {
     if (user.role === "admin") {
       navigate("/admin-dashboard");
     }
-    setUserName(user.name || "");
+    // Set a random medical fact
+    const randomIndex = Math.floor(Math.random() * medicalFacts.length);
+    setRandomFact(medicalFacts[randomIndex]);
   }, [navigate]);
 
   const handleLogout = () => {
@@ -151,15 +164,12 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                {/* Greeting Section */}
-                <div className="mt-12 text-center">
-                  <p className="text-xl text-gray-700">
-                    Welcome back, <span className="font-semibold text-primary">{userName}</span>!
-                  </p>
-                  <p className="mt-2 text-gray-600">
-                    We're here to help you stay on track with your medications.
-                    Remember to take them as prescribed for the best results.
-                  </p>
+                {/* Medical Fact Section */}
+                <div className="mt-12 text-center max-w-2xl">
+                  <div className="bg-primary/5 rounded-lg p-6 shadow-sm border border-primary/10">
+                    <h3 className="text-lg font-semibold text-primary mb-2">💡 Did you know?</h3>
+                    <p className="text-gray-700">{randomFact}</p>
+                  </div>
                 </div>
               </div>
             </main>
