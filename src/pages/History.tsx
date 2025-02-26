@@ -1,10 +1,11 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, X, LogOut } from "lucide-react";
+import { Check, X, LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Sample medication history data (replace with actual data fetching)
@@ -68,6 +69,11 @@ const History = () => {
                 </Button>
               </div>
             </div>
+            <SidebarTrigger className="absolute left-4 top-1/2 -translate-y-1/2">
+              <Button variant="ghost" size="icon" className="hover:text-[#0EA5E9] hover:bg-[#0EA5E9]/10">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SidebarTrigger>
           </nav>
 
           <div className="pt-[73px]">

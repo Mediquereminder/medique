@@ -1,13 +1,13 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Camera, Pencil, Save, LogOut } from "lucide-react";
+import { Camera, Pencil, LogOut, Menu } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 interface UserProfile {
@@ -97,6 +97,11 @@ const Profile = () => {
                 </Button>
               </div>
             </div>
+            <SidebarTrigger className="absolute left-4 top-1/2 -translate-y-1/2">
+              <Button variant="ghost" size="icon" className="hover:text-[#0EA5E9] hover:bg-[#0EA5E9]/10">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SidebarTrigger>
           </nav>
 
           <div className="pt-[73px]">
