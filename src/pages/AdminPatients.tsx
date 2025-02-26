@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -121,11 +121,9 @@ const AdminPatients = () => {
           <nav className="glass-panel fixed top-0 left-0 right-0 z-50">
             <div className="container mx-auto px-4 h-[73px] flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <SidebarTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Menu className="h-4 w-4" />
-                  </Button>
-                </SidebarTrigger>
+                <Button variant="ghost" size="icon" className="lg:hidden">
+                  <Menu className="h-4 w-4" />
+                </Button>
                 <h1 className="text-xl font-semibold">Patients</h1>
               </div>
             </div>
