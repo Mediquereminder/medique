@@ -1,19 +1,43 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const Login = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement login logic
-    console.log("Login attempt with:", { email, password });
+    
+    // Get users from localStorage
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const user = users.find((u: any) => u.email === email && u.password === password);
+
+    if (user) {
+      // Store logged in user info
+      localStorage.setItem("currentUser", JSON.stringify(user));
+      
+      toast({
+        title: "Welcome back!",
+        description: "Login successful.",
+      });
+
+      // Redirect based on role
+      navigate(user.role === "admin" ? "/admin-dashboard" : "/dashboard");
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Invalid email or password.",
+      });
+    }
   };
 
   return (
