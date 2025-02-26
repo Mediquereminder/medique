@@ -101,19 +101,16 @@ const Dashboard = () => {
                 
                 {/* 3D Timeline Row */}
                 <div className="w-full overflow-x-auto perspective-[2000px] py-20 scrollbar-none">
-                  <div className="flex gap-0.5 justify-center min-w-max">
-                    {medications.map((med, index) => (
+                  <div className="flex gap-4 justify-center min-w-max">
+                    {medications.slice(1, 4).map((med, index) => (
                       <Card
                         key={med.id}
                         className={`
                           transform-style-3d transition-all duration-500
                           w-72 shrink-0 p-6
-                          ${index === 0 ? 'opacity-20 scale-50 -translate-x-1/3 translate-z-[-600px]' : ''}
-                          ${index === 1 ? 'opacity-40 scale-75 -translate-x-1/6 translate-z-[-400px]' : ''}
-                          ${index === 2 ? 'opacity-100 scale-100 translate-z-0 z-10' : ''}
-                          ${index === 3 ? 'opacity-40 scale-75 translate-x-1/6 translate-z-[-400px]' : ''}
-                          ${index === 4 ? 'opacity-20 scale-50 translate-x-1/3 translate-z-[-600px]' : ''}
-                          ${index >= 5 ? 'opacity-0 scale-25 translate-x-1/2 translate-z-[-800px]' : ''}
+                          ${index === 0 ? 'opacity-50 scale-75 -translate-x-1/4 translate-z-[-400px]' : ''}
+                          ${index === 1 ? 'opacity-100 scale-100 translate-z-0 z-10' : ''}
+                          ${index === 2 ? 'opacity-50 scale-75 translate-x-1/4 translate-z-[-400px]' : ''}
                           ${
                             med.status === "current"
                               ? "bg-gradient-to-br from-primary/20 to-secondary/20 shadow-2xl border-2 border-primary/20"
