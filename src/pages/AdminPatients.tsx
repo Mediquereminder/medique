@@ -1,12 +1,12 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Menu, UserPlus, AlertCircle, UserX } from "lucide-react";
+import { UserPlus, AlertCircle, UserX } from "lucide-react";
+import { StockNavbar } from "@/components/stock/StockNavbar";
 import {
   Dialog,
   DialogContent,
@@ -171,21 +171,17 @@ const AdminPatients = () => {
     setPatientToRemove(null);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("currentUser");
+    navigate("/login");
+  };
+
   return (
     <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full bg-muted/30">
         <AppSidebar role="admin" />
         <div className="flex-1">
-          <nav className="glass-panel fixed top-0 left-0 right-0 z-50">
-            <div className="container mx-auto px-4 h-[73px] flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="lg:hidden">
-                  <Menu className="h-4 w-4" />
-                </Button>
-                <h1 className="text-xl font-semibold">Patients</h1>
-              </div>
-            </div>
-          </nav>
+          <StockNavbar onLogout={handleLogout} />
 
           <div className="pt-[73px]">
             <main className="container mx-auto px-4 py-8">
