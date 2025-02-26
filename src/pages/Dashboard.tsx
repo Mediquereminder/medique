@@ -7,6 +7,52 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Card } from "@/components/ui/card";
 
+// Sample data - in a real app, this would come from an API
+const medications = [
+  {
+    id: 1,
+    name: "Aspirin",
+    time: "2 hours ago",
+    dosage: "1 tablet",
+    status: "taken",
+  },
+  {
+    id: 2,
+    name: "Vitamin C",
+    time: "1 hour ago",
+    dosage: "2 tablets",
+    status: "taken",
+  },
+  {
+    id: 3,
+    name: "Paracetamol",
+    time: "In 30 minutes",
+    dosage: "2 tablets",
+    status: "current",
+  },
+  {
+    id: 4,
+    name: "Vitamin D",
+    time: "In 3 hours",
+    dosage: "1 capsule",
+    status: "upcoming",
+  },
+  {
+    id: 5,
+    name: "Iron Supplement",
+    time: "In 5 hours",
+    dosage: "1 tablet",
+    status: "upcoming",
+  },
+  {
+    id: 6,
+    name: "Omega-3",
+    time: "In 8 hours",
+    dosage: "2 capsules",
+    status: "upcoming",
+  },
+];
+
 const Dashboard = () => {
   const navigate = useNavigate();
 
@@ -30,7 +76,6 @@ const Dashboard = () => {
       <div className="min-h-screen flex w-full bg-muted/30">
         <AppSidebar role="patient" />
         <div className="flex-1">
-          {/* Navigation */}
           <nav className="glass-panel fixed top-0 left-0 right-0 z-50">
             <div className="container mx-auto px-4 py-4 flex justify-between items-center">
               <div className="flex items-center gap-4">
@@ -50,49 +95,55 @@ const Dashboard = () => {
             </SidebarTrigger>
           </nav>
 
-          {/* Main Content */}
           <div className="pt-[73px]">
             <main className="container mx-auto px-4 py-8">
-              <div className="flex justify-center items-center gap-6 min-h-[calc(100vh-150px)]">
-                {/* Previous Medication Card */}
-                <Card className="w-72 p-6 transform transition-all duration-300 hover:scale-105 hover:-rotate-6 bg-gradient-to-br from-gray-50 to-gray-100 shadow-xl">
-                  <div className="flex flex-col items-center gap-4">
-                    <CheckCircle className="w-12 h-12 text-green-500" />
-                    <h3 className="text-xl font-semibold">Last Taken</h3>
-                    <div className="text-center">
-                      <p className="text-lg font-medium text-primary">Aspirin</p>
-                      <p className="text-sm text-gray-500">2 hours ago</p>
-                      <p className="text-sm text-gray-500">1 tablet</p>
-                    </div>
-                  </div>
-                </Card>
-
-                {/* Current Medication Card */}
-                <Card className="w-80 p-8 transform transition-all duration-300 hover:scale-110 bg-gradient-to-br from-primary/20 to-secondary/20 shadow-2xl border-2 border-primary/20">
-                  <div className="flex flex-col items-center gap-4">
-                    <Timer className="w-16 h-16 text-primary animate-pulse" />
-                    <h3 className="text-2xl font-bold">Next Dose</h3>
-                    <div className="text-center">
-                      <p className="text-xl font-medium text-primary">Paracetamol</p>
-                      <p className="text-lg text-gray-600">In 30 minutes</p>
-                      <p className="text-lg text-gray-600">2 tablets</p>
-                    </div>
-                    <Button className="mt-4 w-full">Mark as Taken</Button>
-                  </div>
-                </Card>
-
-                {/* Upcoming Medication Card */}
-                <Card className="w-72 p-6 transform transition-all duration-300 hover:scale-105 hover:rotate-6 bg-gradient-to-br from-gray-50 to-gray-100 shadow-xl">
-                  <div className="flex flex-col items-center gap-4">
-                    <Clock className="w-12 h-12 text-blue-500" />
-                    <h3 className="text-xl font-semibold">Coming Up</h3>
-                    <div className="text-center">
-                      <p className="text-lg font-medium text-primary">Vitamin D</p>
-                      <p className="text-sm text-gray-500">In 3 hours</p>
-                      <p className="text-sm text-gray-500">1 capsule</p>
-                    </div>
-                  </div>
-                </Card>
+              <div className="flex flex-col items-center gap-8">
+                <h2 className="text-2xl font-bold text-primary mb-4">Medication Timeline</h2>
+                
+                {/* Timeline Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-7xl">
+                  {medications.map((med) => (
+                    <Card
+                      key={med.id}
+                      className={`
+                        transform transition-all duration-300 p-6
+                        ${
+                          med.status === "current"
+                            ? "hover:scale-110 bg-gradient-to-br from-primary/20 to-secondary/20 shadow-2xl border-2 border-primary/20"
+                            : med.status === "taken"
+                            ? "hover:scale-105 hover:-rotate-3 bg-gradient-to-br from-gray-50 to-gray-100 shadow-xl"
+                            : "hover:scale-105 hover:rotate-3 bg-gradient-to-br from-gray-50 to-gray-100 shadow-xl"
+                        }
+                      `}
+                    >
+                      <div className="flex flex-col items-center gap-4">
+                        {med.status === "taken" && <CheckCircle className="w-12 h-12 text-green-500" />}
+                        {med.status === "current" && <Timer className="w-16 h-16 text-primary animate-pulse" />}
+                        {med.status === "upcoming" && <Clock className="w-12 h-12 text-blue-500" />}
+                        
+                        <h3 className={`${med.status === "current" ? "text-2xl font-bold" : "text-xl font-semibold"}`}>
+                          {med.status === "taken" ? "Taken" : med.status === "current" ? "Next Dose" : "Upcoming"}
+                        </h3>
+                        
+                        <div className="text-center">
+                          <p className={`${med.status === "current" ? "text-xl" : "text-lg"} font-medium text-primary`}>
+                            {med.name}
+                          </p>
+                          <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-gray-500`}>
+                            {med.time}
+                          </p>
+                          <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-gray-500`}>
+                            {med.dosage}
+                          </p>
+                        </div>
+                        
+                        {med.status === "current" && (
+                          <Button className="mt-4 w-full">Mark as Taken</Button>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
               </div>
             </main>
           </div>
