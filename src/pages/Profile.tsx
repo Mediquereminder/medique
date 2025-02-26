@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Camera, Pencil, LogOut, Menu, UserRound, UserCog } from "lucide-react";
+import { Camera, Pencil, LogOut, Menu, UserRound, UserCog, Copy, Check } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 interface UserProfile {
@@ -22,6 +22,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   const [profile, setProfile] = useState<UserProfile>({
     name: "",
     email: "",
@@ -42,7 +43,6 @@ const Profile = () => {
       navigate("/admin-dashboard");
     }
     setUserRole(user.role || 'patient');
-    // Load existing profile data
     setProfile((prev) => ({
       ...prev,
       name: user.name || "",
@@ -67,7 +67,6 @@ const Profile = () => {
     const users = JSON.parse(localStorage.getItem("users") || "[]");
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
     
-    // Find the patient
     const patient = users.find((user: any) => user.userId === patientId && user.role === "patient");
     
     if (!patient) {
@@ -79,7 +78,6 @@ const Profile = () => {
       return;
     }
 
-    // Update the caretaker's connected patients
     const updatedUsers = users.map((user: any) => {
       if (user.email === currentUser.email) {
         return {
@@ -98,7 +96,6 @@ const Profile = () => {
 
     localStorage.setItem("users", JSON.stringify(updatedUsers));
     
-    // Update current user in localStorage
     const updatedCurrentUser = {
       ...currentUser,
       connectedPatients: [...(currentUser.connectedPatients || []), patientId]
@@ -164,6 +161,20 @@ const Profile = () => {
     }
   };
 
+  const handleCopyId = () => {
+    const userId = JSON.parse(localStorage.getItem("currentUser") || "{}")?.userId;
+    if (userId) {
+      navigator.clipboard.writeText(userId).then(() => {
+        setIsCopied(true);
+        toast({
+          title: "Copied!",
+          description: "ID copied to clipboard",
+        });
+        setTimeout(() => setIsCopied(false), 2000);
+      });
+    }
+  };
+
   return (
     <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full bg-muted/30">
@@ -193,7 +204,7 @@ const Profile = () => {
               <div className="flex flex-col items-center">
                 <div className="w-full max-w-2xl flex items-center justify-between mb-8">
                   <h2 className="text-2xl font-bold text-primary">My Profile</h2>
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary">
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10">
                     {userRole === 'patient' ? (
                       <>
                         <UserRound className="w-4 h-4" />
@@ -213,9 +224,23 @@ const Profile = () => {
                     <CardTitle>Your ID</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-lg font-mono bg-muted p-2 rounded">
-                      {JSON.parse(localStorage.getItem("currentUser") || "{}")?.userId || "Not available"}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="flex-1 text-lg font-mono bg-muted p-2 rounded">
+                        {JSON.parse(localStorage.getItem("currentUser") || "{}")?.userId || "Not available"}
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={handleCopyId}
+                        className="h-10 w-10"
+                      >
+                        {isCopied ? (
+                          <Check className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                     <p className="text-sm text-muted-foreground mt-2">
                       {userRole === 'patient' 
                         ? "Share this ID with your caretaker to connect with them"
@@ -262,7 +287,6 @@ const Profile = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-6">
-                      {/* Profile Picture */}
                       <div className="flex flex-col items-center gap-4">
                         <div className="relative">
                           <img
@@ -287,7 +311,6 @@ const Profile = () => {
                         </div>
                       </div>
 
-                      {/* Form Fields */}
                       <div className="grid gap-4">
                         <div className="grid gap-2">
                           <Label htmlFor="name">Full Name</Label>
