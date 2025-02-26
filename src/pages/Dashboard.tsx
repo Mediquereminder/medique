@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,7 @@ const Dashboard = () => {
       {/* Navigation */}
       <nav className="glass-panel sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="text-2xl font-semibold text-primary">MediBuddy</div>
+          <div className="text-2xl font-semibold text-primary">Medique</div>
           <Button variant="ghost" onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             Logout

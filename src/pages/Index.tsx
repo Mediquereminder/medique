@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Medal, Shield, Bell, Heart } from "lucide-react";
@@ -32,7 +31,7 @@ const Index = () => {
       {/* Navigation */}
       <nav className="fixed w-full z-50 glass-panel">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <div className="text-2xl font-semibold text-primary">MediBuddy</div>
+          <div className="text-2xl font-semibold text-primary">Medique</div>
           <div className="space-x-4">
             <Button variant="ghost" asChild>
               <Link to="/login" className="button-transition">Login</Link>
@@ -88,7 +87,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="py-8 mt-auto">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>&copy; 2024 MediBuddy. All rights reserved.</p>
+          <p>&copy; 2024 Medique. All rights reserved.</p>
         </div>
       </footer>
     </div>
