@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Camera, Pencil, LogOut, Menu } from "lucide-react";
+import { Camera, Pencil, LogOut, Menu, UserRound, UserCog } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 interface UserProfile {
@@ -31,6 +31,7 @@ const Profile = () => {
     emergencyContact: "",
     profilePic: "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=200&h=200&fit=crop",
   });
+  const [userRole, setUserRole] = useState<'patient' | 'admin'>('patient');
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -40,6 +41,7 @@ const Profile = () => {
     if (user.role === "admin") {
       navigate("/admin-dashboard");
     }
+    setUserRole(user.role || 'patient');
     // Load existing profile data
     setProfile((prev) => ({
       ...prev,
@@ -74,7 +76,6 @@ const Profile = () => {
   const handleSave = () => {
     try {
       const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
-      // Only save essential profile data
       const updatedUser = {
         ...currentUser,
         name: profile.name,
@@ -82,7 +83,6 @@ const Profile = () => {
         phone: profile.phone,
         address: profile.address,
         emergencyContact: profile.emergencyContact,
-        // Only save the profilePic if it's different from the default
         ...(profile.profilePic !== "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=200&h=200&fit=crop" && {
           profilePic: profile.profilePic,
         }),
@@ -132,7 +132,22 @@ const Profile = () => {
           <div className="pt-[73px]">
             <main className="container mx-auto px-4 py-8">
               <div className="flex flex-col items-center">
-                <h2 className="text-2xl font-bold text-primary mb-8">My Profile</h2>
+                <div className="w-full max-w-2xl flex items-center justify-between mb-8">
+                  <h2 className="text-2xl font-bold text-primary">My Profile</h2>
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary">
+                    {userRole === 'patient' ? (
+                      <>
+                        <UserRound className="w-4 h-4" />
+                        <span>Patient Account</span>
+                      </>
+                    ) : (
+                      <>
+                        <UserCog className="w-4 h-4" />
+                        <span>Caretaker Account</span>
+                      </>
+                    )}
+                  </div>
+                </div>
 
                 <Card className="w-full max-w-2xl">
                   <CardHeader>
