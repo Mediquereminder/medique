@@ -2,7 +2,7 @@
 import { LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { ThemeToggle, ColorModeToggle } from "@/components/ui/theme-toggle";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface StockNavbarProps {
   onLogout: () => void;
@@ -17,7 +17,6 @@ export const StockNavbar = ({ onLogout }: StockNavbarProps) => {
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <ColorModeToggle />
           <Button variant="ghost" onClick={onLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             Logout
