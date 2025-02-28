@@ -16,32 +16,35 @@ import History from "./pages/History";
 import Profile from "./pages/Profile";
 import Stock from "./pages/Stock";
 import NotFound from "./pages/NotFound";
+import { ThemeProvider } from "./components/ThemeProvider";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/dashboard/history" element={<History />} />
-          <Route path="/dashboard/profile" element={<Profile />} />
-          <Route path="/dashboard/stock" element={<Stock />} />
-          <Route path="/admin-dashboard" element={<AdminDashboard />} />
-          <Route path="/admin-dashboard/stock" element={<AdminStock />} />
-          <Route path="/admin-dashboard/patients" element={<AdminPatients />} />
-          <Route path="/admin-dashboard/history" element={<History />} />
-          <Route path="/admin-dashboard/profile" element={<AdminProfile />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ThemeProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/history" element={<History />} />
+            <Route path="/dashboard/profile" element={<Profile />} />
+            <Route path="/dashboard/stock" element={<Stock />} />
+            <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route path="/admin-dashboard/stock" element={<AdminStock />} />
+            <Route path="/admin-dashboard/patients" element={<AdminPatients />} />
+            <Route path="/admin-dashboard/history" element={<History />} />
+            <Route path="/admin-dashboard/profile" element={<AdminProfile />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
