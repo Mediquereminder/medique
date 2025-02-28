@@ -90,7 +90,7 @@ const Dashboard = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-muted/30">
+      <div className="min-h-screen flex w-full bg-background">
         <AppSidebar role="patient" />
         <div className="flex-1">
           <nav className="glass-panel fixed top-0 left-0 right-0 z-50">
@@ -107,7 +107,7 @@ const Dashboard = () => {
               </div>
             </div>
             <SidebarTrigger className="absolute left-4 top-1/2 -translate-y-1/2">
-              <Button variant="ghost" size="icon" className="hover:text-[#0EA5E9] hover:bg-[#0EA5E9]/10">
+              <Button variant="ghost" size="icon" className="hover:text-primary hover:bg-primary/10">
                 <Menu className="h-5 w-5" />
               </Button>
             </SidebarTrigger>
@@ -133,7 +133,7 @@ const Dashboard = () => {
                           ${
                             med.status === "current"
                               ? "bg-gradient-to-br from-primary/20 to-secondary/20 shadow-2xl border-2 border-primary/20"
-                              : "bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 shadow-xl"
+                              : "bg-card shadow-xl"
                           }
                         `}
                       >
@@ -150,10 +150,10 @@ const Dashboard = () => {
                             <p className={`${med.status === "current" ? "text-xl" : "text-lg"} font-medium text-primary`}>
                               {med.name}
                             </p>
-                            <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-gray-500 dark:text-gray-400`}>
+                            <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-muted-foreground`}>
                               {med.time}
                             </p>
-                            <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-gray-500 dark:text-gray-400`}>
+                            <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-muted-foreground`}>
                               {med.dosage}
                             </p>
                           </div>
@@ -169,9 +169,9 @@ const Dashboard = () => {
 
                 {/* Medical Fact Section */}
                 <div className="mt-12 text-center max-w-2xl">
-                  <div className="bg-primary/5 dark:bg-primary/10 rounded-lg p-6 shadow-sm border border-primary/10 dark:border-primary/20">
+                  <div className="bg-accent text-accent-foreground rounded-lg p-6 shadow-sm border border-accent/30">
                     <h3 className="text-lg font-semibold text-primary mb-2">💡 Did you know?</h3>
-                    <p className="text-gray-700 dark:text-gray-300">{randomFact}</p>
+                    <p className="text-card-foreground">{randomFact}</p>
                   </div>
                 </div>
               </div>
