@@ -6,7 +6,7 @@ import { LogOut, Menu, Clock, CheckCircle, Timer } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Card } from "@/components/ui/card";
-import { ThemeToggle, ColorModeToggle } from "@/components/ui/theme-toggle";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 // Sample medical facts
 const medicalFacts = [
@@ -100,7 +100,6 @@ const Dashboard = () => {
               </div>
               <div className="flex items-center gap-2">
                 <ThemeToggle />
-                <ColorModeToggle />
                 <Button variant="ghost" onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout
@@ -134,7 +133,7 @@ const Dashboard = () => {
                           ${
                             med.status === "current"
                               ? "bg-gradient-to-br from-primary/20 to-secondary/20 shadow-2xl border-2 border-primary/20"
-                              : "bg-gradient-to-br from-gray-50 to-gray-100 shadow-xl"
+                              : "bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 shadow-xl"
                           }
                         `}
                       >
@@ -151,10 +150,10 @@ const Dashboard = () => {
                             <p className={`${med.status === "current" ? "text-xl" : "text-lg"} font-medium text-primary`}>
                               {med.name}
                             </p>
-                            <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-gray-500`}>
+                            <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-gray-500 dark:text-gray-400`}>
                               {med.time}
                             </p>
-                            <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-gray-500`}>
+                            <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-gray-500 dark:text-gray-400`}>
                               {med.dosage}
                             </p>
                           </div>
@@ -170,9 +169,9 @@ const Dashboard = () => {
 
                 {/* Medical Fact Section */}
                 <div className="mt-12 text-center max-w-2xl">
-                  <div className="bg-primary/5 rounded-lg p-6 shadow-sm border border-primary/10">
+                  <div className="bg-primary/5 dark:bg-primary/10 rounded-lg p-6 shadow-sm border border-primary/10 dark:border-primary/20">
                     <h3 className="text-lg font-semibold text-primary mb-2">💡 Did you know?</h3>
-                    <p className="text-gray-700">{randomFact}</p>
+                    <p className="text-gray-700 dark:text-gray-300">{randomFact}</p>
                   </div>
                 </div>
               </div>

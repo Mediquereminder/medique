@@ -48,22 +48,6 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 187 71% 56%;
   }
-
-  /* Color blindness modes */
-  .protanopia {
-    --primary: 220 85% 65%;
-    --secondary: 240 70% 75%;
-  }
-
-  .deuteranopia {
-    --primary: 260 70% 65%;
-    --secondary: 280 65% 75%;
-  }
-
-  .tritanopia {
-    --primary: 30 90% 65%;
-    --secondary: 40 80% 75%;
-  }
 }
 
 @layer base {
