@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -9,8 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   AlertCircle,
-  LogOut,
-  Menu,
   Plus,
   Trash2,
   AlertTriangle,
@@ -21,6 +18,7 @@ import {
   Shield,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { StockNavbar } from "@/components/stock/StockNavbar";
 
 interface Medicine {
   id: string;
@@ -116,31 +114,7 @@ const Stock = () => {
       <div className="min-h-screen flex w-full bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <AppSidebar role={userRole} />
         <div className="flex-1">
-          <nav className="glass-panel fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-white/80">
-            <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <div className="text-2xl font-semibold text-primary ml-12 flex items-center gap-2">
-                  <Package className="w-6 h-6" />
-                  Medique
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
-                </Button>
-              </div>
-            </div>
-            <SidebarTrigger className="absolute left-4 top-1/2 -translate-y-1/2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hover:text-[#0EA5E9] hover:bg-[#0EA5E9]/10"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SidebarTrigger>
-          </nav>
+          <StockNavbar onLogout={handleLogout} />
 
           <div className="pt-[73px]">
             <main className="container mx-auto px-4 py-8">
