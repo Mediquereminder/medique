@@ -30,7 +30,7 @@ const Profile = () => {
     phone: "",
     address: "",
     emergencyContact: "",
-    profilePic: "/lovable-uploads/94fc513d-b664-4fed-998b-247198b436fb.png",
+    profilePic: "/placeholder.svg", // Using placeholder avatar as default
   });
   const [userRole, setUserRole] = useState<'patient' | 'admin'>('patient');
   const [patientId, setPatientId] = useState("");
@@ -185,7 +185,7 @@ const Profile = () => {
             <div className="container mx-auto px-4 py-4 flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <img 
-                  src="/lovable-uploads/94fc513d-b664-4fed-998b-247198b436fb.png" 
+                  src="/lovable-uploads/b81c9421-0f7b-46a1-aec0-86a7739c4803.png" 
                   alt="Medique Logo" 
                   className="h-8 w-auto ml-12"
                 />

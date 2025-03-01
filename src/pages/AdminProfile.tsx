@@ -29,7 +29,7 @@ const AdminProfile = () => {
     phone: "",
     department: "",
     role: "admin",
-    profilePic: "/lovable-uploads/94fc513d-b664-4fed-998b-247198b436fb.png",
+    profilePic: "/placeholder.svg", // Using placeholder avatar as default
   });
 
   useEffect(() => {
