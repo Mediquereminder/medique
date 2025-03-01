@@ -6,7 +6,6 @@ import { LogOut, Menu, Clock, CheckCircle, Timer } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Card } from "@/components/ui/card";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 // Sample medical facts
 const medicalFacts = [
@@ -99,7 +98,6 @@ const Dashboard = () => {
                 <div className="text-2xl font-semibold text-primary ml-12">Medique</div>
               </div>
               <div className="flex items-center gap-2">
-                <ThemeToggle />
                 <Button variant="ghost" onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout
