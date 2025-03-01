@@ -88,7 +88,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="py-8 mt-auto">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>&copy; 2025 Medique. All rights reserved.</p>
+          <p>&copy; 2024 Medique. All rights reserved.</p>
         </div>
       </footer>
     </div>
