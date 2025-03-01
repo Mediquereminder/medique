@@ -6,9 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Camera, Pencil, LogOut, Menu, UserRound, UserCog } from "lucide-react";
+import { Camera, Pencil, LogOut, Menu, UserRound, UserCog, CalendarIcon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format, differenceInYears } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface AdminProfile {
   name: string;
@@ -18,7 +22,7 @@ interface AdminProfile {
   role: string;
   profilePic: string;
   gender?: string;
-  age?: number;
+  birthDate?: Date;
   height?: number;
   weight?: number;
 }
@@ -35,16 +39,24 @@ const AdminProfile = () => {
     role: "admin",
     profilePic: "/placeholder.svg", // Using placeholder avatar as default
     gender: "",
-    age: undefined,
+    birthDate: undefined,
     height: undefined,
     weight: undefined,
   });
+
+  const calculateAge = (birthDate?: Date) => {
+    if (!birthDate) return undefined;
+    return differenceInYears(new Date(), birthDate);
+  };
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
     if (!user.email || user.role !== "admin") {
       navigate("/login");
     }
+    
+    // Convert stored birthDate string to Date object if it exists
+    const birthDate = user.birthDate ? new Date(user.birthDate) : undefined;
     
     setProfile((prev) => ({
       ...prev,
@@ -54,7 +66,7 @@ const AdminProfile = () => {
       department: user.department || "",
       profilePic: user.profilePic || prev.profilePic,
       gender: user.gender || "",
-      age: user.age || undefined,
+      birthDate: birthDate,
       height: user.height || undefined,
       weight: user.weight || undefined,
     }));
@@ -89,7 +101,7 @@ const AdminProfile = () => {
         phone: profile.phone,
         department: profile.department,
         gender: profile.gender,
-        age: profile.age,
+        birthDate: profile.birthDate ? profile.birthDate.toISOString() : undefined,
         height: profile.height,
         weight: profile.weight,
         ...(profile.profilePic !== "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=200&h=200&fit=crop" && {
@@ -235,7 +247,7 @@ const AdminProfile = () => {
                                 setProfile((prev) => ({ ...prev, gender: value }))
                               }
                             >
-                              <SelectTrigger className="w-full">
+                              <SelectTrigger className="w-full bg-white">
                                 <SelectValue placeholder="Select gender" />
                               </SelectTrigger>
                               <SelectContent className="bg-white">
@@ -245,18 +257,43 @@ const AdminProfile = () => {
                             </Select>
                           </div>
                           <div className="grid gap-2">
-                            <Label htmlFor="age">Age</Label>
-                            <Input
-                              id="age"
-                              type="number"
-                              value={profile.age || ""}
-                              onChange={(e) =>
-                                setProfile((prev) => ({ ...prev, age: e.target.value ? Number(e.target.value) : undefined }))
-                              }
-                              disabled={!isEditing}
-                              min={0}
-                              max={120}
-                            />
+                            <Label htmlFor="birthdate">Birth Date</Label>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  id="birthdate"
+                                  variant="outline"
+                                  className={cn(
+                                    "w-full justify-start text-left font-normal bg-white",
+                                    !profile.birthDate && "text-muted-foreground"
+                                  )}
+                                  disabled={!isEditing}
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {profile.birthDate ? (
+                                    format(profile.birthDate, "PPP")
+                                  ) : (
+                                    <span>Pick a date</span>
+                                  )}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 bg-white" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={profile.birthDate}
+                                  onSelect={(date) =>
+                                    setProfile((prev) => ({ ...prev, birthDate: date || undefined }))
+                                  }
+                                  disabled={!isEditing}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            {profile.birthDate && (
+                              <p className="text-sm text-muted-foreground">
+                                Age: {calculateAge(profile.birthDate)} years
+                              </p>
+                            )}
                           </div>
                         </div>
 

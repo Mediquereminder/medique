@@ -4,9 +4,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Mail, Lock, User } from "lucide-react";
+import { ArrowLeft, Mail, Lock, User, CalendarIcon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format, differenceInYears } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const generateUniqueId = () => {
   return Math.random().toString(36).substr(2, 9).toUpperCase();
@@ -20,12 +24,16 @@ const SignUp = () => {
     email: "",
     password: "",
     role: "patient",
-    // Adding default values for the new fields
     gender: "",
-    age: "",
+    birthDate: undefined as Date | undefined,
     height: "",
     weight: "",
   });
+
+  const calculateAge = (birthDate?: Date) => {
+    if (!birthDate) return undefined;
+    return differenceInYears(new Date(), birthDate);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +61,7 @@ const SignUp = () => {
       connectedPatients: [],  // For caretakers
       connectedCaretakers: [], // For patients
       // Convert string values to appropriate types for numeric fields
-      age: formData.age ? Number(formData.age) : undefined,
+      birthDate: formData.birthDate ? formData.birthDate.toISOString() : undefined,
       height: formData.height ? Number(formData.height) : undefined,
       weight: formData.weight ? Number(formData.weight) : undefined,
     };
@@ -152,7 +160,7 @@ const SignUp = () => {
                     setFormData({ ...formData, gender: value })
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full bg-white">
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>
                   <SelectContent className="bg-white">
@@ -162,21 +170,45 @@ const SignUp = () => {
                 </Select>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="age">Age</Label>
-                  <Input
-                    id="age"
-                    type="number"
-                    placeholder="30"
-                    value={formData.age}
-                    onChange={(e) =>
-                      setFormData({ ...formData, age: e.target.value })
-                    }
-                    min={0}
-                    max={120}
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="birthdate">Birth Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="birthdate"
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal bg-white",
+                        !formData.birthDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.birthDate ? (
+                        format(formData.birthDate, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-white" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.birthDate}
+                      onSelect={(date) =>
+                        setFormData({ ...formData, birthDate: date || undefined })
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                {formData.birthDate && (
+                  <p className="text-sm text-muted-foreground">
+                    Age: {calculateAge(formData.birthDate)} years
+                  </p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="height">Height (cm)</Label>
                   <Input
