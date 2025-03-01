@@ -216,28 +216,27 @@ const Dashboard = () => {
                   </Button>
                 </div>
                 
-                {/* 3D Timeline Row */}
-                <div className="w-full overflow-hidden py-16 relative">
+                {/* Smooth Timeline Slider */}
+                <div className="w-full max-w-5xl mx-auto relative overflow-hidden py-12">
                   <div 
                     className={`
-                      flex gap-8 justify-center w-full max-w-5xl mx-auto
-                      transition-transform duration-500 ease-in-out
-                      ${animating ? '-translate-x-[33%]' : ''}
+                      flex gap-8 justify-center w-full
+                      transition-all duration-500 ease-in-out
+                      ${animating ? '-translate-x-[calc(100%/3+1rem)]' : ''}
                     `}
                   >
                     {timelineMeds.map((med, index) => (
                       <Card
                         key={med.id}
                         className={`
-                          transform-style-3d transition-all duration-500
-                          w-72 shrink-0 p-6
-                          hover:shadow-2xl hover:-translate-y-2
+                          transform transition-all duration-300 hover:shadow-xl
+                          w-1/3 p-6 flex-shrink-0
                           ${
                             med.status === "taken"
-                              ? "bg-card/70 border-2 border-green-500/20 opacity-80"
+                              ? "bg-card/90 border-l-4 border-l-green-500 hover:-translate-y-1"
                               : med.status === "current"
-                              ? "bg-gradient-to-br from-primary/20 to-secondary/20 shadow-2xl border-2 border-primary/20 scale-110 z-10"
-                              : "bg-card shadow-xl opacity-80"
+                              ? "bg-gradient-to-br from-primary/10 to-secondary/10 shadow-lg border-l-4 border-l-primary hover:-translate-y-2"
+                              : "bg-card/90 border-l-4 border-l-blue-400 hover:-translate-y-1"
                           }
                         `}
                       >
@@ -273,25 +272,6 @@ const Dashboard = () => {
                         </div>
                       </Card>
                     ))}
-                  </div>
-                  
-                  {/* Timeline Indicators */}
-                  <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-2 mt-4">
-                    <div className="h-1 bg-primary w-24 rounded-full relative">
-                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-muted-foreground whitespace-nowrap">
-                        Taken
-                      </div>
-                    </div>
-                    <div className="h-1 bg-primary/40 w-24 rounded-full relative">
-                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-muted-foreground whitespace-nowrap">
-                        Current
-                      </div>
-                    </div>
-                    <div className="h-1 bg-primary/20 w-24 rounded-full relative">
-                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs text-muted-foreground whitespace-nowrap">
-                        Upcoming
-                      </div>
-                    </div>
                   </div>
                 </div>
 
