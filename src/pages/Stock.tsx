@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -136,7 +137,7 @@ const Stock = () => {
 
                 {/* Add New Medicine - Only visible to caretakers */}
                 {userRole !== 'patient' && (
-                  <Card className="border-2 border-primary/20 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 backdrop-blur-md bg-gradient-to-r from-[#FEF7CD]/60 via-[#FEC6A1]/70 to-[#FEF7CD]/60">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Pill className="w-5 h-5 text-primary" />
@@ -156,7 +157,7 @@ const Stock = () => {
                                 name: e.target.value,
                               }))
                             }
-                            className="border-2 hover:border-primary/50 transition-colors"
+                            className="border-2 hover:border-primary/50 transition-colors bg-white/80"
                             placeholder="Enter medicine name"
                           />
                         </div>
@@ -173,7 +174,7 @@ const Stock = () => {
                                 quantity: parseInt(e.target.value) || 0,
                               }))
                             }
-                            className="border-2 hover:border-primary/50 transition-colors"
+                            className="border-2 hover:border-primary/50 transition-colors bg-white/80"
                           />
                         </div>
                         <div className="space-y-2">
@@ -189,7 +190,7 @@ const Stock = () => {
                                 threshold: parseInt(e.target.value) || 0,
                               }))
                             }
-                            className="border-2 hover:border-primary/50 transition-colors"
+                            className="border-2 hover:border-primary/50 transition-colors bg-white/80"
                           />
                         </div>
                         <div className="space-y-2">
@@ -204,7 +205,7 @@ const Stock = () => {
                                 expiryDate: e.target.value,
                               }))
                             }
-                            className="border-2 hover:border-primary/50 transition-colors"
+                            className="border-2 hover:border-primary/50 transition-colors bg-white/80"
                           />
                         </div>
                       </div>
@@ -220,7 +221,7 @@ const Stock = () => {
                 )}
 
                 {/* Medicine List */}
-                <Card className="border-2 border-primary/20 shadow-lg">
+                <Card className="border-0 shadow-lg backdrop-blur-md bg-gradient-to-r from-[#FEF7CD]/60 via-[#FEC6A1]/70 to-[#FEF7CD]/60">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Package className="w-5 h-5 text-primary" />
@@ -240,8 +241,9 @@ const Stock = () => {
                             key={medicine.id}
                             className={`
                               flex items-center justify-between p-6 
-                              bg-white rounded-lg shadow-sm border-2
-                              ${isLow ? 'border-red-200' : 'border-primary/20'}
+                              backdrop-blur-sm rounded-lg shadow-sm
+                              bg-gradient-to-r from-white/40 via-white/60 to-white/40
+                              ${isLow ? 'border-l-4 border-l-red-400' : 'border-l-4 border-l-primary/70'}
                               transform hover:scale-[1.01] transition-all duration-200
                               hover:shadow-md
                             `}
@@ -271,7 +273,7 @@ const Stock = () => {
                             <div className="flex items-center gap-4">
                               {userRole !== 'patient' ? (
                                 <>
-                                  <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-2">
+                                  <div className="flex items-center gap-2 bg-white/70 rounded-lg p-2">
                                     <Button
                                       variant="outline"
                                       size="icon"
@@ -306,7 +308,7 @@ const Stock = () => {
                                   </Button>
                                 </>
                               ) : (
-                                <span className="px-4 py-2 bg-gray-50 rounded-lg font-medium">
+                                <span className="px-4 py-2 bg-white/70 rounded-lg font-medium">
                                   Quantity: {medicine.quantity}
                                 </span>
                               )}
