@@ -145,6 +145,137 @@ const SelectSeparator = React.forwardRef<
 ))
 SelectSeparator.displayName = SelectPrimitive.Separator.displayName
 
+// Create a new component for the split age selector
+interface SplitAgeSelectProps {
+  value?: number;
+  onValueChange?: (value: number) => void;
+  disabled?: boolean;
+  className?: string;
+}
+
+const SplitAgeSelect = React.forwardRef<
+  HTMLDivElement,
+  SplitAgeSelectProps
+>(({ value, onValueChange, disabled, className }, ref) => {
+  // Break down the age into sections (e.g., days/months/years)
+  const [days, setDays] = React.useState<number | undefined>(undefined);
+  const [months, setMonths] = React.useState<number | undefined>(undefined);
+  const [years, setYears] = React.useState<number | undefined>(undefined);
+  
+  // Update the component when the value changes from outside
+  React.useEffect(() => {
+    if (value !== undefined) {
+      // For this example, we'll consider value as total days
+      // and convert it to a days/months/years representation
+      const totalDays = value;
+      const calculatedYears = Math.floor(totalDays / 365);
+      const remainingDays = totalDays - (calculatedYears * 365);
+      const calculatedMonths = Math.floor(remainingDays / 30);
+      const finalDays = remainingDays - (calculatedMonths * 30);
+      
+      setYears(calculatedYears);
+      setMonths(calculatedMonths);
+      setDays(finalDays);
+    }
+  }, [value]);
+  
+  // Update the total age when any section changes
+  const updateAge = React.useCallback((d: number | undefined, m: number | undefined, y: number | undefined) => {
+    if (onValueChange && d !== undefined && m !== undefined && y !== undefined) {
+      // Convert back to total days for the parent component
+      const totalDays = (y * 365) + (m * 30) + d;
+      onValueChange(totalDays);
+    }
+  }, [onValueChange]);
+  
+  // Handle changes to each section
+  const handleDaysChange = (value: string) => {
+    const newDays = parseInt(value, 10);
+    setDays(newDays);
+    updateAge(newDays, months, years);
+  };
+  
+  const handleMonthsChange = (value: string) => {
+    const newMonths = parseInt(value, 10);
+    setMonths(newMonths);
+    updateAge(days, newMonths, years);
+  };
+  
+  const handleYearsChange = (value: string) => {
+    const newYears = parseInt(value, 10);
+    setYears(newYears);
+    updateAge(days, months, newYears);
+  };
+  
+  // Generate options for each dropdown
+  const daysOptions = Array.from({ length: 31 }, (_, i) => i);
+  const monthsOptions = Array.from({ length: 12 }, (_, i) => i);
+  const yearsOptions = Array.from({ length: 120 }, (_, i) => i);
+  
+  return (
+    <div 
+      className={cn("flex items-center space-x-1", className)}
+      ref={ref}
+    >
+      <Select
+        disabled={disabled}
+        value={days?.toString()}
+        onValueChange={handleDaysChange}
+      >
+        <SelectTrigger className="w-full bg-white">
+          <SelectValue placeholder="DD" />
+        </SelectTrigger>
+        <SelectContent>
+          {daysOptions.map((day) => (
+            <SelectItem key={`day-${day}`} value={day.toString()}>
+              {day}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      
+      <span className="text-lg font-medium">/</span>
+      
+      <Select
+        disabled={disabled}
+        value={months?.toString()}
+        onValueChange={handleMonthsChange}
+      >
+        <SelectTrigger className="w-full bg-white">
+          <SelectValue placeholder="MM" />
+        </SelectTrigger>
+        <SelectContent>
+          {monthsOptions.map((month) => (
+            <SelectItem key={`month-${month}`} value={month.toString()}>
+              {month}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      
+      <span className="text-lg font-medium">/</span>
+      
+      <Select
+        disabled={disabled}
+        value={years?.toString()}
+        onValueChange={handleYearsChange}
+      >
+        <SelectTrigger className="w-full bg-white">
+          <SelectValue placeholder="YYYY" />
+        </SelectTrigger>
+        <SelectContent>
+          {yearsOptions.map((year) => (
+            <SelectItem key={`year-${year}`} value={year.toString()}>
+              {year}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+});
+SplitAgeSelect.displayName = "SplitAgeSelect";
+
 export {
   Select,
   SelectGroup,
@@ -156,4 +287,5 @@ export {
   SelectSeparator,
   SelectScrollUpButton,
   SelectScrollDownButton,
+  SplitAgeSelect,
 }

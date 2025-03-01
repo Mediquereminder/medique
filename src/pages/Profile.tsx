@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Camera, Pencil, LogOut, Menu, UserRound, UserCog, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SplitAgeSelect } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, differenceInYears } from "date-fns";
@@ -419,6 +419,8 @@ const Profile = () => {
                               </SelectContent>
                             </Select>
                           </div>
+                          {/* Previous age dropdown */}
+                          {/*
                           <div className="grid gap-2">
                             <Label htmlFor="age">Age</Label>
                             <Select
@@ -439,6 +441,19 @@ const Profile = () => {
                                 ))}
                               </SelectContent>
                             </Select>
+                          </div>
+                          */}
+
+                          {/* New split age select */}
+                          <div className="grid gap-2">
+                            <Label htmlFor="age">Age</Label>
+                            <SplitAgeSelect
+                              disabled={!isEditing}
+                              value={profile.age}
+                              onValueChange={(value) =>
+                                setProfile((prev) => ({ ...prev, age: value }))
+                              }
+                            />
                           </div>
                         </div>
 

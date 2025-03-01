@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Camera, Pencil, LogOut, Menu, UserRound, UserCog, CalendarIcon } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SplitAgeSelect } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, differenceInYears } from "date-fns";
@@ -275,44 +275,20 @@ const AdminProfile = () => {
                               </SelectContent>
                             </Select>
                           </div>
+                          {/* Replace the birthDate section with SplitAgeSelect */}
                           <div className="grid gap-2">
-                            <Label htmlFor="birthdate">Birth Date</Label>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  id="birthdate"
-                                  variant="outline"
-                                  className={cn(
-                                    "w-full justify-start text-left font-normal bg-white",
-                                    !profile.birthDate && "text-muted-foreground"
-                                  )}
-                                  disabled={!isEditing}
-                                >
-                                  <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {profile.birthDate ? (
-                                    format(profile.birthDate, "PPP")
-                                  ) : (
-                                    <span>Pick a date</span>
-                                  )}
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 bg-white" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={profile.birthDate}
-                                  onSelect={(date) =>
-                                    setProfile((prev) => ({ ...prev, birthDate: date || undefined }))
-                                  }
-                                  disabled={!isEditing}
-                                  initialFocus
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            {profile.birthDate && (
-                              <p className="text-sm text-muted-foreground">
-                                Age: {calculateAge(profile.birthDate)} years
-                              </p>
-                            )}
+                            <Label htmlFor="age">Age</Label>
+                            <SplitAgeSelect
+                              disabled={!isEditing}
+                              value={calculateAge(profile.birthDate)}
+                              onValueChange={(value) => {
+                                // Convert age in days to a birthdate
+                                const today = new Date();
+                                const birthdate = new Date(today);
+                                birthdate.setDate(today.getDate() - value);
+                                setProfile((prev) => ({ ...prev, birthDate: birthdate }));
+                              }}
+                            />
                           </div>
                         </div>
 
