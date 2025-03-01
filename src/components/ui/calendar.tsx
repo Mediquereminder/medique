@@ -101,20 +101,12 @@ function Calendar({
     );
   }
 
-  // Add done button to the footer - but don't use onSelect directly
+  // Add done button to the footer
   function CalendarFooter() {
     return (
       <div className="flex justify-end p-2 border-t mt-2">
         <button
-          onClick={() => {
-            // Just close any popup by clicking outside
-            const event = new MouseEvent('click', {
-              view: window,
-              bubbles: true,
-              cancelable: true,
-            });
-            document.dispatchEvent(event);
-          }}
+          onClick={() => props.onSelect && props.onSelect(props.selected, props.selected ? { focusable: true } : { focusable: false })}
           className={cn(buttonVariants({ size: "sm" }))}
         >
           <Check className="h-4 w-4 mr-1" />
