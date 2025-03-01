@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -7,8 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Camera, Pencil, LogOut, Menu, UserRound, UserCog, Copy, Check, CalendarIcon } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { Camera, Pencil, LogOut, Menu, UserRound, UserCog, Copy, Check } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -26,6 +25,7 @@ interface UserProfile {
   birthDate?: Date;
   height?: number;
   weight?: number;
+  age?: number;
 }
 
 const Profile = () => {
@@ -44,14 +44,10 @@ const Profile = () => {
     birthDate: undefined,
     height: undefined,
     weight: undefined,
+    age: undefined,
   });
   const [userRole, setUserRole] = useState<'patient' | 'admin'>('patient');
   const [patientId, setPatientId] = useState("");
-
-  const calculateAge = (birthDate?: Date) => {
-    if (!birthDate) return undefined;
-    return differenceInYears(new Date(), birthDate);
-  };
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -78,8 +74,12 @@ const Profile = () => {
       birthDate: birthDate,
       height: user.height || undefined,
       weight: user.weight || undefined,
+      age: user.age || undefined,
     }));
   }, [navigate]);
+
+  // Generate age options array from 1 to 120
+  const ageOptions = Array.from({ length: 120 }, (_, i) => i + 1);
 
   const handleConnectPatient = () => {
     if (!patientId.trim()) {
@@ -159,6 +159,15 @@ const Profile = () => {
   const handleSave = () => {
     try {
       const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+      
+      // Create a new Date from the selected age (approximate)
+      let birthDateFromAge;
+      if (profile.age) {
+        const currentDate = new Date();
+        birthDateFromAge = new Date();
+        birthDateFromAge.setFullYear(currentDate.getFullYear() - profile.age);
+      }
+      
       const updatedUser = {
         ...currentUser,
         name: profile.name,
@@ -167,9 +176,11 @@ const Profile = () => {
         address: profile.address,
         emergencyContact: profile.emergencyContact,
         gender: profile.gender,
-        birthDate: profile.birthDate ? profile.birthDate.toISOString() : undefined,
+        birthDate: profile.birthDate ? profile.birthDate.toISOString() : 
+                  (birthDateFromAge ? birthDateFromAge.toISOString() : undefined),
         height: profile.height,
         weight: profile.weight,
+        age: profile.age,
         ...(profile.profilePic !== "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=200&h=200&fit=crop" && {
           profilePic: profile.profilePic,
         }),
@@ -409,43 +420,25 @@ const Profile = () => {
                             </Select>
                           </div>
                           <div className="grid gap-2">
-                            <Label htmlFor="birthdate">Birth Date</Label>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  id="birthdate"
-                                  variant="outline"
-                                  className={cn(
-                                    "w-full justify-start text-left font-normal bg-white",
-                                    !profile.birthDate && "text-muted-foreground"
-                                  )}
-                                  disabled={!isEditing}
-                                >
-                                  <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {profile.birthDate ? (
-                                    format(profile.birthDate, "PPP")
-                                  ) : (
-                                    <span>Pick a date</span>
-                                  )}
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 bg-white" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={profile.birthDate}
-                                  onSelect={(date) =>
-                                    setProfile((prev) => ({ ...prev, birthDate: date || undefined }))
-                                  }
-                                  disabled={!isEditing}
-                                  initialFocus
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            {profile.birthDate && (
-                              <p className="text-sm text-muted-foreground">
-                                Age: {calculateAge(profile.birthDate)} years
-                              </p>
-                            )}
+                            <Label htmlFor="age">Age</Label>
+                            <Select
+                              disabled={!isEditing}
+                              value={profile.age ? profile.age.toString() : ""}
+                              onValueChange={(value) =>
+                                setProfile((prev) => ({ ...prev, age: parseInt(value, 10) }))
+                              }
+                            >
+                              <SelectTrigger className="w-full bg-white">
+                                <SelectValue placeholder="Select age" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-white max-h-[200px] overflow-y-auto">
+                                {ageOptions.map((age) => (
+                                  <SelectItem key={age} value={age.toString()}>
+                                    {age}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                         </div>
 
