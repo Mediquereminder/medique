@@ -63,6 +63,27 @@ const initialMedications = [
     dosage: "2 capsules",
     status: "upcoming",
   },
+  {
+    id: 7,
+    name: "Calcium",
+    time: "In 10 hours",
+    dosage: "1 tablet",
+    status: "upcoming",
+  },
+  {
+    id: 8,
+    name: "Magnesium",
+    time: "In 12 hours",
+    dosage: "1 capsule",
+    status: "upcoming",
+  },
+  {
+    id: 9,
+    name: "Zinc",
+    time: "Tomorrow",
+    dosage: "1 tablet",
+    status: "upcoming",
+  },
 ];
 
 const Dashboard = () => {
@@ -72,6 +93,7 @@ const Dashboard = () => {
   const [timelinePosition, setTimelinePosition] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [clickedMedId, setClickedMedId] = useState(null);
+  const [slideDirection, setSlideDirection] = useState("left"); // new state to track animation direction
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -90,7 +112,8 @@ const Dashboard = () => {
     // Set the clicked medication ID for targeted animation
     setClickedMedId(id);
     
-    // Set animating state to trigger the shift animation
+    // Set direction and animating state to trigger the shift animation
+    setSlideDirection("left");
     setAnimating(true);
     
     // After a brief delay to allow animation to complete
@@ -100,7 +123,7 @@ const Dashboard = () => {
         med.id === id ? { ...med, status: "taken", time: "Just now" } : med
       );
       
-      // Move timeline position to the right
+      // Move timeline position to the right to show more upcoming medications
       setTimelinePosition(prev => prev + 1);
       setMedications(updatedMedications);
       
@@ -119,7 +142,7 @@ const Dashboard = () => {
     // Determine which medications to display based on timeline position
     let displayMeds = [];
     
-    // Always try to show one taken, one current, and one upcoming medication
+    // Show a taken medication on the left (if available and within position range)
     if (timelinePosition < takenMeds.length) {
       // Show a taken medication on the left
       displayMeds.push(takenMeds[takenMeds.length - 1 - timelinePosition]);
@@ -130,32 +153,54 @@ const Dashboard = () => {
       displayMeds.push(currentMed);
     }
     
-    // Show an upcoming medication on the right
-    if (upcomingMeds.length > 0 && timelinePosition < upcomingMeds.length) {
-      displayMeds.push(upcomingMeds[timelinePosition]);
-    }
+    // Show multiple upcoming medications to the right
+    const upcomingStartIndex = timelinePosition;
+    const maxUpcoming = 3; // Show up to 3 upcoming medications
     
-    // If we don't have 3 medications to show, add more upcoming ones
-    while (displayMeds.length < 3 && upcomingMeds.length > displayMeds.filter(med => med.status === "upcoming").length) {
-      const nextIndex = displayMeds.filter(med => med.status === "upcoming").length;
-      if (upcomingMeds[nextIndex]) {
-        displayMeds.push(upcomingMeds[nextIndex]);
-      } else {
-        break;
+    for (let i = upcomingStartIndex; i < upcomingStartIndex + maxUpcoming; i++) {
+      if (i < upcomingMeds.length) {
+        displayMeds.push(upcomingMeds[i]);
       }
     }
     
-    // If we still don't have 3 medications, add more taken ones
-    while (displayMeds.length < 3 && takenMeds.length > displayMeds.filter(med => med.status === "taken").length) {
+    // If we still don't have enough medications to show (minimum 5 for smooth animation), add more taken ones
+    while (displayMeds.length < 5 && takenMeds.length > displayMeds.filter(med => med.status === "taken").length) {
       const nextIndex = displayMeds.filter(med => med.status === "taken").length;
       if (takenMeds[nextIndex]) {
-        displayMeds.push(takenMeds[nextIndex]);
+        // Add to the beginning to maintain order
+        displayMeds.unshift(takenMeds[nextIndex]);
       } else {
         break;
       }
     }
     
     return displayMeds;
+  };
+
+  const handlePrevMedication = () => {
+    if (timelinePosition > 0 && !animating) {
+      setSlideDirection("right");
+      setAnimating(true);
+      
+      setTimeout(() => {
+        setTimelinePosition(prev => prev - 1);
+        setAnimating(false);
+      }, 600);
+    }
+  };
+
+  const handleNextMedication = () => {
+    const upcomingMeds = medications.filter(med => med.status === "upcoming");
+    
+    if (timelinePosition < upcomingMeds.length - 1 && !animating) {
+      setSlideDirection("left");
+      setAnimating(true);
+      
+      setTimeout(() => {
+        setTimelinePosition(prev => prev + 1);
+        setAnimating(false);
+      }, 600);
+    }
   };
 
   const handleLogout = () => {
@@ -199,7 +244,7 @@ const Dashboard = () => {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => setTimelinePosition(Math.max(0, timelinePosition - 1))}
+                    onClick={handlePrevMedication}
                     disabled={timelinePosition === 0 || animating}
                     className="flex gap-2 items-center transition-all hover:bg-primary/10 hover:text-primary hover:scale-105"
                   >
@@ -208,14 +253,14 @@ const Dashboard = () => {
                   </Button>
                   
                   <div className="text-muted-foreground text-sm font-medium">
-                    Showing {timelinePosition + 1} of {Math.max(1, medications.length - 2)}
+                    Showing {timelinePosition + 1} of {Math.max(1, medications.filter(med => med.status === "upcoming").length)}
                   </div>
                   
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => setTimelinePosition(Math.min(medications.length - 3, timelinePosition + 1))}
-                    disabled={timelinePosition >= medications.length - 3 || animating}
+                    onClick={handleNextMedication}
+                    disabled={timelinePosition >= medications.filter(med => med.status === "upcoming").length - 1 || animating}
                     className="flex gap-2 items-center transition-all hover:bg-primary/10 hover:text-primary hover:scale-105"
                   >
                     Next
@@ -224,7 +269,7 @@ const Dashboard = () => {
                 </div>
                 
                 {/* Pill Ring Timeline */}
-                <div className="w-full max-w-5xl mx-auto relative py-12 rounded-xl overflow-visible" style={{ perspective: "1000px" }}>
+                <div className="w-full max-w-5xl mx-auto relative py-12 rounded-xl overflow-hidden" style={{ perspective: "1000px" }}>
                   {/* Timeline ring connection */}
                   <div className="absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-primary to-green-500 rounded-full z-0"></div>
                   
@@ -233,30 +278,34 @@ const Dashboard = () => {
                     className={`
                       flex justify-center w-full relative
                       transition-all duration-600 ease-in-out
-                      ${animating ? 'transform -translate-x-[calc(100%/3+1rem)]' : ''}
+                      ${animating ? (slideDirection === 'left' ? 'transform -translate-x-[calc(100%/5+1rem)]' : 'transform translate-x-[calc(100%/5+1rem)]') : ''}
                     `}
                     style={{ transformStyle: "preserve-3d" }}
                   >
                     {timelineMeds.map((med, index) => {
-                      const isCenter = med.status === "current";
+                      const isCentered = index === Math.floor(timelineMeds.length / 2) && med.status === "current";
                       const isPast = med.status === "taken";
-                      const isFuture = med.status === "upcoming";
+                      const isUpcoming = med.status === "upcoming";
+                      const isFirstUpcoming = med.status === "upcoming" && medications.filter(m => m.status === "upcoming").indexOf(med) === 0;
+                      
+                      // Determine relative position for sizing and emphasis
+                      const isMainCard = isCentered || (currentMed = medications.find(m => m.status === "current")) === undefined && isFirstUpcoming;
                       
                       return (
                         <div 
                           key={med.id}
                           className={`
-                            ${isCenter ? 'z-20 px-2 -translate-y-4' : 'z-10 px-4'}
+                            ${isMainCard ? 'z-20 px-2 -translate-y-4' : 'z-10 px-4'}
                             ${index === 0 ? 'text-right' : ''}
-                            ${index === 2 ? 'text-left' : ''}
-                            transition-all duration-500 relative w-1/3
+                            ${index === timelineMeds.length - 1 ? 'text-left' : ''}
+                            transition-all duration-500 relative flex-1
                           `}
                         >
                           {/* Card connector to timeline */}
                           <div 
                             className={`
                               absolute left-1/2 top-1/2 w-1 bg-primary/80 
-                              ${isCenter ? 'h-16' : 'h-8'}
+                              ${isMainCard ? 'h-16' : 'h-8'}
                               transition-all duration-300
                             `} 
                             style={{ transform: 'translateX(-50%)' }}
@@ -267,9 +316,9 @@ const Dashboard = () => {
                             className={`
                               absolute left-1/2 top-1/2 rounded-full shadow-lg border-4
                               ${isPast ? 'bg-green-500 border-green-300' : ''}
-                              ${isCenter ? 'bg-primary border-primary-foreground animate-pulse' : ''}
-                              ${isFuture ? 'bg-blue-400 border-blue-300' : ''}
-                              ${isCenter ? 'w-6 h-6' : 'w-4 h-4'}
+                              ${isMainCard ? 'bg-primary border-primary-foreground animate-pulse' : ''}
+                              ${isUpcoming && !isMainCard ? 'bg-blue-400 border-blue-300' : ''}
+                              ${isMainCard ? 'w-6 h-6' : 'w-4 h-4'}
                               transition-all duration-300
                             `} 
                             style={{ transform: 'translate(-50%, -50%)' }}
@@ -279,55 +328,55 @@ const Dashboard = () => {
                             className={`
                               relative overflow-hidden rounded-3xl
                               ${isPast ? 'bg-gradient-to-br from-[#a7f3d0]/80 to-[#86efac]/80 border-green-300' : ''}
-                              ${isCenter ? 'bg-gradient-to-br from-primary/30 to-primary/10 shadow-xl border-primary' : ''}
-                              ${isFuture ? 'bg-gradient-to-br from-[#bfdbfe]/80 to-[#93c5fd]/80 border-blue-300' : ''}
+                              ${isMainCard ? 'bg-gradient-to-br from-primary/30 to-primary/10 shadow-xl border-primary' : ''}
+                              ${isUpcoming && !isMainCard ? 'bg-gradient-to-br from-[#bfdbfe]/80 to-[#93c5fd]/80 border-blue-300' : ''}
                               ${clickedMedId === med.id ? 'pulse-once' : ''}
                               transition-all duration-500 ease-in-out
                               hover:shadow-2xl hover:-translate-y-1
-                              ${isCenter ? 'scale-110 mt-16 mb-2' : 'mt-8'}
+                              ${isMainCard ? 'scale-110 mt-16 mb-2' : 'mt-8'}
                               before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r 
                               before:from-transparent before:via-white/10 before:to-transparent 
                               before:translate-x-[-100%] before:skew-x-[-20deg] before:animate-shimmer
                             `}
                             style={{
-                              boxShadow: isCenter 
+                              boxShadow: isMainCard 
                                 ? '0 20px 25px -5px rgba(79, 209, 197, 0.4)' 
                                 : '',
-                              borderRadius: isCenter ? '1.5rem' : '1rem',
-                              transform: isCenter ? 'translateY(-0.5rem)' : '',
+                              borderRadius: isMainCard ? '1.5rem' : '1rem',
+                              transform: isMainCard ? 'translateY(-0.5rem)' : '',
                             }}
                           >
                             <div className="flex flex-col items-center gap-4 relative z-10 p-6">
                               {isPast && 
                                 <CheckCircle className="w-12 h-12 text-green-600 animate-fadeIn" />
                               }
-                              {isCenter && 
+                              {isMainCard && med.status === "current" && 
                                 <div className="relative">
                                   <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping"></div>
                                   <Timer className="w-16 h-16 text-primary relative z-10" />
                                 </div>
                               }
-                              {isFuture && 
+                              {isUpcoming && 
                                 <Clock className="w-12 h-12 text-blue-600 animate-fadeIn" />
                               }
                               
-                              <h3 className={`${isCenter ? "text-2xl font-bold" : "text-xl font-semibold"} transition-all duration-300`}>
-                                {isPast ? "Taken" : isCenter ? "Next Dose" : "Upcoming"}
+                              <h3 className={`${isMainCard ? "text-2xl font-bold" : "text-xl font-semibold"} transition-all duration-300`}>
+                                {isPast ? "Taken" : med.status === "current" ? "Next Dose" : "Upcoming"}
                               </h3>
                               
                               <div className="text-center">
-                                <p className={`${isCenter ? "text-xl" : "text-lg"} font-medium ${isCenter ? "text-primary" : isPast ? "text-green-700" : "text-blue-700"} transition-all duration-300`}>
+                                <p className={`${isMainCard ? "text-xl" : "text-lg"} font-medium ${isMainCard ? "text-primary" : isPast ? "text-green-700" : "text-blue-700"} transition-all duration-300`}>
                                   {med.name}
                                 </p>
-                                <p className={`${isCenter ? "text-lg" : "text-sm"} text-muted-foreground transition-all duration-300`}>
+                                <p className={`${isMainCard ? "text-lg" : "text-sm"} text-muted-foreground transition-all duration-300`}>
                                   {med.time}
                                 </p>
-                                <p className={`${isCenter ? "text-lg" : "text-sm"} text-muted-foreground transition-all duration-300`}>
+                                <p className={`${isMainCard ? "text-lg" : "text-sm"} text-muted-foreground transition-all duration-300`}>
                                   {med.dosage}
                                 </p>
                               </div>
                               
-                              {isCenter && (
+                              {med.status === "current" && (
                                 <Button 
                                   className="mt-4 w-full group relative overflow-hidden"
                                   onClick={() => handleMarkAsTaken(med.id)}
