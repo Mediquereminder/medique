@@ -1,50 +1,19 @@
 
-import { createContext, useContext, useEffect, useState } from "react";
-
-type Theme = "light" | "dark";
+import { createContext, useContext } from "react";
 
 interface ThemeContextType {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
+  theme: "light";
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
-const getInitialTheme = (): Theme => {
-  // Check localStorage first
-  const storedTheme = localStorage.getItem("theme") as Theme;
-  if (storedTheme === "light" || storedTheme === "dark") {
-    return storedTheme;
-  }
-  
-  // If no theme in localStorage, check system preference
-  if (typeof window !== "undefined" && window.matchMedia) {
-    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      return "dark";
-    }
-  }
-  
-  // Default to light
-  return "light";
-};
 
 export function ThemeProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [theme, setTheme] = useState<Theme>(getInitialTheme);
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove("light", "dark");
-    root.classList.add(theme);
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
   const value = {
-    theme,
-    setTheme,
+    theme: "light" as const,
   };
 
   return (
