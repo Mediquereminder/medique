@@ -20,7 +20,7 @@ const medicalFacts = [
 ];
 
 // Sample data - in a real app, this would come from an API
-const medications = [
+const initialMedications = [
   {
     id: 1,
     name: "Aspirin",
@@ -68,6 +68,9 @@ const medications = [
 const Dashboard = () => {
   const navigate = useNavigate();
   const [randomFact, setRandomFact] = useState("");
+  const [medications, setMedications] = useState(initialMedications);
+  const [displayedMeds, setDisplayedMeds] = useState(medications.slice(1, 4));
+  const [activeIndex, setActiveIndex] = useState(1);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -81,6 +84,27 @@ const Dashboard = () => {
     const randomIndex = Math.floor(Math.random() * medicalFacts.length);
     setRandomFact(medicalFacts[randomIndex]);
   }, [navigate]);
+
+  // Update displayed medications when medications state changes
+  useEffect(() => {
+    const startIndex = Math.max(0, activeIndex - 1);
+    const endIndex = Math.min(medications.length, startIndex + 3);
+    setDisplayedMeds(medications.slice(startIndex, endIndex));
+  }, [medications, activeIndex]);
+
+  const handleMarkAsTaken = (id) => {
+    // Update medications list
+    const updatedMedications = medications.map(med => 
+      med.id === id ? { ...med, status: "taken", time: "Just now" } : med
+    );
+    
+    // If the current medication was marked as taken, shift focus to the next one
+    if (id === medications[activeIndex].id) {
+      setActiveIndex(prev => Math.min(prev + 1, medications.length - 2));
+    }
+    
+    setMedications(updatedMedications);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
@@ -119,18 +143,21 @@ const Dashboard = () => {
                 {/* 3D Timeline Row */}
                 <div className="w-full overflow-x-auto perspective-[2000px] py-20 scrollbar-none">
                   <div className="flex gap-4 justify-center min-w-max">
-                    {medications.slice(1, 4).map((med, index) => (
+                    {displayedMeds.map((med, index) => (
                       <Card
                         key={med.id}
                         className={`
                           transform-style-3d transition-all duration-500
                           w-72 shrink-0 p-6
+                          hover:shadow-2xl hover:-translate-y-2
                           ${index === 0 ? 'opacity-50 scale-75 -translate-x-1/4 translate-z-[-400px]' : ''}
                           ${index === 1 ? 'opacity-100 scale-100 translate-z-0 z-10' : ''}
                           ${index === 2 ? 'opacity-50 scale-75 translate-x-1/4 translate-z-[-400px]' : ''}
                           ${
                             med.status === "current"
                               ? "bg-gradient-to-br from-primary/20 to-secondary/20 shadow-2xl border-2 border-primary/20"
+                              : med.status === "taken"
+                              ? "bg-card/70 border-2 border-green-500/20"
                               : "bg-card shadow-xl"
                           }
                         `}
@@ -157,7 +184,12 @@ const Dashboard = () => {
                           </div>
                           
                           {med.status === "current" && (
-                            <Button className="mt-4 w-full">Mark as Taken</Button>
+                            <Button 
+                              className="mt-4 w-full hover:bg-green-500 transition-colors"
+                              onClick={() => handleMarkAsTaken(med.id)}
+                            >
+                              Mark as Taken
+                            </Button>
                           )}
                         </div>
                       </Card>
