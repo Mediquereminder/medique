@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -37,7 +38,7 @@ const AdminProfile = () => {
     phone: "",
     department: "",
     role: "admin",
-    profilePic: "/placeholder.svg", // Using placeholder avatar as default
+    profilePic: "", // Empty string as default
     gender: "",
     birthDate: undefined,
     height: undefined,
@@ -191,11 +192,17 @@ const AdminProfile = () => {
                       {/* Profile Picture */}
                       <div className="flex flex-col items-center gap-4">
                         <div className="relative">
-                          <img
-                            src={profile.profilePic}
-                            alt="Profile"
-                            className="w-32 h-32 rounded-full object-cover border-4 border-primary/20"
-                          />
+                          {profile.profilePic ? (
+                            <img
+                              src={profile.profilePic}
+                              alt="Profile"
+                              className="w-32 h-32 rounded-full object-cover border-4 border-primary/20"
+                            />
+                          ) : (
+                            <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center border-4 border-primary/20">
+                              <UserCog className="w-16 h-16 text-muted-foreground" />
+                            </div>
+                          )}
                           <label
                             htmlFor="profile-pic"
                             className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full cursor-pointer hover:bg-primary/90 transition-colors"
