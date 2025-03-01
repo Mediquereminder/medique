@@ -13,7 +13,7 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
-  captionLayout = "buttons",
+  captionLayout = "dropdown-buttons",
   ...props
 }: CalendarProps) {
   const [currentYear, setCurrentYear] = React.useState<number>(new Date().getFullYear());
@@ -79,7 +79,7 @@ function Calendar({
               <SelectTrigger className="h-7 px-2 py-1 text-xs bg-white">
                 <SelectValue>{value}</SelectValue>
               </SelectTrigger>
-              <SelectContent className="max-h-80 bg-white">
+              <SelectContent className="max-h-80 overflow-y-auto bg-white">
                 {options.map((option, id) => (
                   <SelectItem
                     key={id}
