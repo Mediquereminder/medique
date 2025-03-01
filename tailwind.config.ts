@@ -26,11 +26,11 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#1B68C0", // Medique logo blue
+          DEFAULT: "#4FD1C5",
           foreground: "#FFFFFF",
         },
         secondary: {
-          DEFAULT: "#5CCBF0", // Medique logo light blue
+          DEFAULT: "#9AE6B4",
           foreground: "#2D3748",
         },
         destructive: {
