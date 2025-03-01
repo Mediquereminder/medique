@@ -1,6 +1,7 @@
+
 import * as React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker } from "react-day-picker";
+import { ChevronLeft, ChevronRight, ChevronsUpDown, Check } from "lucide-react";
+import { DayPicker, CaptionProps, useNavigation } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -13,6 +14,108 @@ function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
+  const [showYearMonthSelector, setShowYearMonthSelector] = React.useState(false);
+  const { goToMonth, goToDate } = useNavigation();
+
+  // Custom caption component to handle month/year selection
+  function CustomCaption(captionProps: CaptionProps) {
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: 100 }, (_, i) => currentYear - 99 + i);
+    const currentMonth = captionProps.displayMonth;
+
+    if (showYearMonthSelector) {
+      return (
+        <div className="rdp-caption">
+          <div className="flex flex-col space-y-2 p-2 rounded-md border bg-card">
+            <div className="grid grid-cols-3 gap-2 py-2">
+              {months.map((month, index) => (
+                <button
+                  key={month}
+                  onClick={() => {
+                    const newDate = new Date(currentMonth);
+                    newDate.setMonth(index);
+                    goToMonth(newDate);
+                  }}
+                  className={cn(
+                    "text-sm rounded-md p-2 hover:bg-accent",
+                    currentMonth.getMonth() === index ? "bg-primary text-primary-foreground" : ""
+                  )}
+                >
+                  {month.slice(0, 3)}
+                </button>
+              ))}
+            </div>
+            
+            <div className="h-44 overflow-y-auto">
+              <div className="grid grid-cols-3 gap-2 py-2">
+                {years.map((year) => (
+                  <button
+                    key={year}
+                    onClick={() => {
+                      const newDate = new Date(currentMonth);
+                      newDate.setFullYear(year);
+                      goToMonth(newDate);
+                    }}
+                    className={cn(
+                      "text-sm rounded-md p-2 hover:bg-accent",
+                      currentMonth.getFullYear() === year ? "bg-primary text-primary-foreground" : ""
+                    )}
+                  >
+                    {year}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex justify-between items-center pt-2 border-t">
+              <button
+                onClick={() => setShowYearMonthSelector(false)}
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => setShowYearMonthSelector(false)}
+                className={cn(buttonVariants({ size: "sm" }))}
+              >
+                <Check className="h-4 w-4 mr-1" />
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex justify-center pt-1 relative items-center">
+        <button
+          onClick={() => setShowYearMonthSelector(true)}
+          className="flex items-center gap-1 font-medium text-sm hover:bg-accent p-1 rounded"
+        >
+          {captionProps.displayMonth.toLocaleString('en-US', { month: 'long', year: 'numeric' })}
+          <ChevronsUpDown className="h-4 w-4 opacity-50" />
+        </button>
+      </div>
+    );
+  }
+
+  // Add done button to the footer
+  function CalendarFooter() {
+    return (
+      <div className="flex justify-end p-2 border-t mt-2">
+        <button
+          onClick={() => props.onSelect && props.onSelect(props.selected, props.selected ? { focusable: true } : { focusable: false })}
+          className={cn(buttonVariants({ size: "sm" }))}
+        >
+          <Check className="h-4 w-4 mr-1" />
+          Done
+        </button>
+      </div>
+    );
+  }
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -54,7 +157,10 @@ function Calendar({
       components={{
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
+        Caption: CustomCaption,
+        Footer: CalendarFooter,
       }}
+      footer={<CalendarFooter />}
       {...props}
     />
   );
