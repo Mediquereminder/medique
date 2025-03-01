@@ -1,6 +1,6 @@
 
 import * as React from "react";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
@@ -13,15 +13,9 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
-  captionLayout = "dropdown-buttons",
+  captionLayout = "dropdown",
   ...props
 }: CalendarProps) {
-  const [currentYear, setCurrentYear] = React.useState<number>(new Date().getFullYear());
-  const years = React.useMemo(() => {
-    const currentYear = new Date().getFullYear();
-    return Array.from({ length: 100 }, (_, i) => currentYear - i);
-  }, []);
-
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -76,10 +70,10 @@ function Calendar({
               value={value?.toString()}
               onValueChange={handleValueChange}
             >
-              <SelectTrigger className="h-7 px-2 py-1 text-xs bg-white">
+              <SelectTrigger className="h-7 min-w-[80px] px-2 py-1 text-xs border border-input">
                 <SelectValue>{value}</SelectValue>
               </SelectTrigger>
-              <SelectContent className="max-h-80 overflow-y-auto bg-white">
+              <SelectContent className="max-h-60 overflow-y-auto">
                 {options.map((option, id) => (
                   <SelectItem
                     key={id}
