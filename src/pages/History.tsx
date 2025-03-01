@@ -83,8 +83,13 @@ const History = () => {
         <div className="flex-1">
           <nav className="glass-panel fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-white/80">
             <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <div className="text-2xl font-semibold text-primary ml-12">Medique</div>
+              <div className="flex items-center gap-2">
+                <img 
+                  src="/lovable-uploads/b81c9421-0f7b-46a1-aec0-86a7739c4803.png" 
+                  alt="Medique Logo" 
+                  className="h-8 w-auto ml-12"
+                />
+                <div className="text-2xl font-semibold text-primary">Medique</div>
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="ghost" onClick={handleLogout}>
