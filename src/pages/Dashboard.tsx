@@ -71,6 +71,7 @@ const Dashboard = () => {
   const [medications, setMedications] = useState(initialMedications);
   const [timelinePosition, setTimelinePosition] = useState(0);
   const [animating, setAnimating] = useState(false);
+  const [clickedMedId, setClickedMedId] = useState(null);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -86,6 +87,9 @@ const Dashboard = () => {
   }, [navigate]);
 
   const handleMarkAsTaken = (id) => {
+    // Set the clicked medication ID for targeted animation
+    setClickedMedId(id);
+    
     // Set animating state to trigger the shift animation
     setAnimating(true);
     
@@ -99,8 +103,11 @@ const Dashboard = () => {
       // Move timeline position to the right
       setTimelinePosition(prev => prev + 1);
       setMedications(updatedMedications);
+      
+      // Reset animation states
       setAnimating(false);
-    }, 500); // Match this with the animation duration
+      setClickedMedId(null);
+    }, 600); // Slightly longer to match animation duration
   };
 
   // Get medications for the timeline based on current position
@@ -185,22 +192,22 @@ const Dashboard = () => {
           <div className="pt-[73px]">
             <main className="container mx-auto px-4 py-8">
               <div className="flex flex-col items-center">
-                <h2 className="text-2xl font-bold text-primary mb-8">Medication Timeline</h2>
+                <h2 className="text-2xl font-bold text-primary mb-8 animate-fadeIn">Medication Timeline</h2>
                 
                 {/* Timeline Navigation */}
-                <div className="flex justify-between items-center w-full max-w-3xl mb-4">
+                <div className="flex justify-between items-center w-full max-w-3xl mb-6 animate-fadeIn" style={{ animationDelay: "200ms" }}>
                   <Button 
                     variant="outline" 
                     size="sm"
                     onClick={() => setTimelinePosition(Math.max(0, timelinePosition - 1))}
                     disabled={timelinePosition === 0 || animating}
-                    className="flex gap-2 items-center"
+                    className="flex gap-2 items-center transition-all hover:bg-primary/10 hover:text-primary hover:scale-105"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Previous
                   </Button>
                   
-                  <div className="text-muted-foreground text-sm">
+                  <div className="text-muted-foreground text-sm font-medium">
                     Showing {timelinePosition + 1} of {Math.max(1, medications.length - 2)}
                   </div>
                   
@@ -209,7 +216,7 @@ const Dashboard = () => {
                     size="sm"
                     onClick={() => setTimelinePosition(Math.min(medications.length - 3, timelinePosition + 1))}
                     disabled={timelinePosition >= medications.length - 3 || animating}
-                    className="flex gap-2 items-center"
+                    className="flex gap-2 items-center transition-all hover:bg-primary/10 hover:text-primary hover:scale-105"
                   >
                     Next
                     <ArrowRight className="h-4 w-4" />
@@ -217,56 +224,80 @@ const Dashboard = () => {
                 </div>
                 
                 {/* Smooth Timeline Slider */}
-                <div className="w-full max-w-5xl mx-auto relative overflow-hidden py-12">
+                <div className="w-full max-w-5xl mx-auto relative overflow-hidden py-12 rounded-xl" style={{ perspective: "1000px" }}>
                   <div 
                     className={`
                       flex gap-8 justify-center w-full
-                      transition-all duration-500 ease-in-out
-                      ${animating ? '-translate-x-[calc(100%/3+1rem)]' : ''}
+                      transition-all duration-600 ease-in-out
+                      ${animating ? 'transform -translate-x-[calc(100%/3+1rem)]' : ''}
                     `}
+                    style={{ transformStyle: "preserve-3d" }}
                   >
-                    {timelineMeds.map((med, index) => (
+                    {timelineMeds.map((med) => (
                       <Card
                         key={med.id}
                         className={`
-                          transform transition-all duration-300 hover:shadow-xl
-                          w-1/3 p-6 flex-shrink-0
+                          w-1/3 p-6 flex-shrink-0 relative overflow-hidden
                           ${
                             med.status === "taken"
-                              ? "bg-card/90 border-l-4 border-l-green-500 hover:-translate-y-1"
+                              ? "bg-card/90 border-l-4 border-l-green-500" 
                               : med.status === "current"
-                              ? "bg-gradient-to-br from-primary/10 to-secondary/10 shadow-lg border-l-4 border-l-primary hover:-translate-y-2"
-                              : "bg-card/90 border-l-4 border-l-blue-400 hover:-translate-y-1"
+                              ? "bg-gradient-to-br from-primary/10 to-secondary/10 shadow-xl border-l-4 border-l-primary"
+                              : "bg-card/90 border-l-4 border-l-blue-400" 
                           }
+                          ${clickedMedId === med.id ? 'pulse-once scale-105' : ''}
+                          transition-all duration-500 ease-in-out
+                          hover:shadow-2xl hover:-translate-y-2 hover:scale-105
+                          before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r 
+                          before:from-transparent before:via-white/10 before:to-transparent 
+                          before:translate-x-[-100%] before:skew-x-[-20deg] before:animate-shimmer
                         `}
+                        style={{
+                          boxShadow: med.status === "current" 
+                            ? "0 10px 25px -5px rgba(79, 209, 197, 0.3)" 
+                            : "",
+                        }}
                       >
-                        <div className="flex flex-col items-center gap-4">
-                          {med.status === "taken" && <CheckCircle className="w-12 h-12 text-green-500" />}
-                          {med.status === "current" && <Timer className="w-16 h-16 text-primary animate-pulse" />}
-                          {med.status === "upcoming" && <Clock className="w-12 h-12 text-blue-500" />}
+                        <div className="flex flex-col items-center gap-4 relative z-10">
+                          {med.status === "taken" && 
+                            <CheckCircle className="w-12 h-12 text-green-500 animate-fadeIn" />
+                          }
+                          {med.status === "current" && 
+                            <div className="relative">
+                              <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping"></div>
+                              <Timer className="w-16 h-16 text-primary relative z-10" />
+                            </div>
+                          }
+                          {med.status === "upcoming" && 
+                            <Clock className="w-12 h-12 text-blue-500 animate-fadeIn" />
+                          }
                           
-                          <h3 className={`${med.status === "current" ? "text-2xl font-bold" : "text-xl font-semibold"}`}>
+                          <h3 className={`${med.status === "current" ? "text-2xl font-bold" : "text-xl font-semibold"} transition-all duration-300`}>
                             {med.status === "taken" ? "Taken" : med.status === "current" ? "Next Dose" : "Upcoming"}
                           </h3>
                           
                           <div className="text-center">
-                            <p className={`${med.status === "current" ? "text-xl" : "text-lg"} font-medium text-primary`}>
+                            <p className={`${med.status === "current" ? "text-xl" : "text-lg"} font-medium text-primary transition-all duration-300`}>
                               {med.name}
                             </p>
-                            <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-muted-foreground`}>
+                            <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-muted-foreground transition-all duration-300`}>
                               {med.time}
                             </p>
-                            <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-muted-foreground`}>
+                            <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-muted-foreground transition-all duration-300`}>
                               {med.dosage}
                             </p>
                           </div>
                           
                           {med.status === "current" && (
                             <Button 
-                              className="mt-4 w-full hover:bg-green-500 transition-colors"
+                              className="mt-4 w-full group relative overflow-hidden"
                               onClick={() => handleMarkAsTaken(med.id)}
                             >
-                              Mark as Taken
+                              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-green-400 to-green-500 transition-transform duration-300 transform translate-y-full group-hover:translate-y-0"></span>
+                              <span className="relative flex items-center justify-center gap-2 transition-all duration-300 group-hover:text-white">
+                                <CheckCircle className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
+                                Mark as Taken
+                              </span>
                             </Button>
                           )}
                         </div>
@@ -276,8 +307,8 @@ const Dashboard = () => {
                 </div>
 
                 {/* Medical Fact Section */}
-                <div className="mt-12 text-center max-w-2xl">
-                  <div className="bg-accent text-accent-foreground rounded-lg p-6 shadow-sm border border-accent/30">
+                <div className="mt-12 text-center max-w-2xl animate-fadeIn" style={{ animationDelay: "400ms" }}>
+                  <div className="bg-accent text-accent-foreground rounded-lg p-6 shadow-sm border border-accent/30 hover-lift">
                     <h3 className="text-lg font-semibold text-primary mb-2">💡 Did you know?</h3>
                     <p className="text-card-foreground">{randomFact}</p>
                   </div>

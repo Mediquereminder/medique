@@ -72,12 +72,25 @@ export default {
           "0%": { transform: "translateY(100%)" },
           "100%": { transform: "translateY(0)" },
         },
+        shimmer: {
+          "0%": { transform: "translateX(-100%) skewX(-20deg)" },
+          "100%": { transform: "translateX(200%) skewX(-20deg)" },
+        },
+        ping: {
+          "0%": { transform: "scale(1)", opacity: "0.8" },
+          "80%, 100%": { transform: "scale(2)", opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         fadeIn: "fadeIn 0.5s ease-out",
         slideUp: "slideUp 0.5s ease-out",
+        shimmer: "shimmer 2s infinite",
+        ping: "ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite",
+      },
+      transitionDuration: {
+        '600': '600ms',
       },
     },
   },

@@ -51,3 +51,22 @@
 .page-fade-in {
   @apply animate-fadeIn;
 }
+
+/* New animations */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+@keyframes pulse-once {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+.pulse-once {
+  animation: pulse-once 0.6s ease-in-out;
+}
