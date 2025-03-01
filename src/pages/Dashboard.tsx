@@ -223,86 +223,127 @@ const Dashboard = () => {
                   </Button>
                 </div>
                 
-                {/* Smooth Timeline Slider */}
-                <div className="w-full max-w-5xl mx-auto relative overflow-hidden py-12 rounded-xl" style={{ perspective: "1000px" }}>
+                {/* Pill Ring Timeline */}
+                <div className="w-full max-w-5xl mx-auto relative py-12 rounded-xl overflow-visible" style={{ perspective: "1000px" }}>
+                  {/* Timeline ring connection */}
+                  <div className="absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-primary to-green-500 rounded-full z-0"></div>
+                  
+                  {/* Timeline cards attached to ring */}
                   <div 
                     className={`
-                      flex gap-8 justify-center w-full
+                      flex justify-center w-full relative
                       transition-all duration-600 ease-in-out
                       ${animating ? 'transform -translate-x-[calc(100%/3+1rem)]' : ''}
                     `}
                     style={{ transformStyle: "preserve-3d" }}
                   >
-                    {timelineMeds.map((med) => (
-                      <Card
-                        key={med.id}
-                        className={`
-                          w-1/3 p-6 flex-shrink-0 relative overflow-hidden
-                          ${
-                            med.status === "taken"
-                              ? "bg-card/90 border-l-4 border-l-green-500" 
-                              : med.status === "current"
-                              ? "bg-gradient-to-br from-primary/10 to-secondary/10 shadow-xl border-l-4 border-l-primary"
-                              : "bg-card/90 border-l-4 border-l-blue-400" 
-                          }
-                          ${clickedMedId === med.id ? 'pulse-once scale-105' : ''}
-                          transition-all duration-500 ease-in-out
-                          hover:shadow-2xl hover:-translate-y-2 hover:scale-105
-                          before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r 
-                          before:from-transparent before:via-white/10 before:to-transparent 
-                          before:translate-x-[-100%] before:skew-x-[-20deg] before:animate-shimmer
-                        `}
-                        style={{
-                          boxShadow: med.status === "current" 
-                            ? "0 10px 25px -5px rgba(79, 209, 197, 0.3)" 
-                            : "",
-                        }}
-                      >
-                        <div className="flex flex-col items-center gap-4 relative z-10">
-                          {med.status === "taken" && 
-                            <CheckCircle className="w-12 h-12 text-green-500 animate-fadeIn" />
-                          }
-                          {med.status === "current" && 
-                            <div className="relative">
-                              <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping"></div>
-                              <Timer className="w-16 h-16 text-primary relative z-10" />
+                    {timelineMeds.map((med, index) => {
+                      const isCenter = med.status === "current";
+                      const isPast = med.status === "taken";
+                      const isFuture = med.status === "upcoming";
+                      
+                      return (
+                        <div 
+                          key={med.id}
+                          className={`
+                            ${isCenter ? 'z-20 px-2 -translate-y-4' : 'z-10 px-4'}
+                            ${index === 0 ? 'text-right' : ''}
+                            ${index === 2 ? 'text-left' : ''}
+                            transition-all duration-500 relative w-1/3
+                          `}
+                        >
+                          {/* Card connector to timeline */}
+                          <div 
+                            className={`
+                              absolute left-1/2 top-1/2 w-1 bg-primary/80 
+                              ${isCenter ? 'h-16' : 'h-8'}
+                              transition-all duration-300
+                            `} 
+                            style={{ transform: 'translateX(-50%)' }}
+                          ></div>
+                          
+                          {/* Timeline node */}
+                          <div 
+                            className={`
+                              absolute left-1/2 top-1/2 rounded-full shadow-lg border-4
+                              ${isPast ? 'bg-green-500 border-green-300' : ''}
+                              ${isCenter ? 'bg-primary border-primary-foreground animate-pulse' : ''}
+                              ${isFuture ? 'bg-blue-400 border-blue-300' : ''}
+                              ${isCenter ? 'w-6 h-6' : 'w-4 h-4'}
+                              transition-all duration-300
+                            `} 
+                            style={{ transform: 'translate(-50%, -50%)' }}
+                          ></div>
+                          
+                          <Card
+                            className={`
+                              relative overflow-hidden rounded-3xl
+                              ${isPast ? 'bg-gradient-to-br from-[#a7f3d0]/80 to-[#86efac]/80 border-green-300' : ''}
+                              ${isCenter ? 'bg-gradient-to-br from-primary/30 to-primary/10 shadow-xl border-primary' : ''}
+                              ${isFuture ? 'bg-gradient-to-br from-[#bfdbfe]/80 to-[#93c5fd]/80 border-blue-300' : ''}
+                              ${clickedMedId === med.id ? 'pulse-once' : ''}
+                              transition-all duration-500 ease-in-out
+                              hover:shadow-2xl hover:-translate-y-1
+                              ${isCenter ? 'scale-110 mt-16 mb-2' : 'mt-8'}
+                              before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r 
+                              before:from-transparent before:via-white/10 before:to-transparent 
+                              before:translate-x-[-100%] before:skew-x-[-20deg] before:animate-shimmer
+                            `}
+                            style={{
+                              boxShadow: isCenter 
+                                ? '0 20px 25px -5px rgba(79, 209, 197, 0.4)' 
+                                : '',
+                              borderRadius: isCenter ? '1.5rem' : '1rem',
+                              transform: isCenter ? 'translateY(-0.5rem)' : '',
+                            }}
+                          >
+                            <div className="flex flex-col items-center gap-4 relative z-10 p-6">
+                              {isPast && 
+                                <CheckCircle className="w-12 h-12 text-green-600 animate-fadeIn" />
+                              }
+                              {isCenter && 
+                                <div className="relative">
+                                  <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping"></div>
+                                  <Timer className="w-16 h-16 text-primary relative z-10" />
+                                </div>
+                              }
+                              {isFuture && 
+                                <Clock className="w-12 h-12 text-blue-600 animate-fadeIn" />
+                              }
+                              
+                              <h3 className={`${isCenter ? "text-2xl font-bold" : "text-xl font-semibold"} transition-all duration-300`}>
+                                {isPast ? "Taken" : isCenter ? "Next Dose" : "Upcoming"}
+                              </h3>
+                              
+                              <div className="text-center">
+                                <p className={`${isCenter ? "text-xl" : "text-lg"} font-medium ${isCenter ? "text-primary" : isPast ? "text-green-700" : "text-blue-700"} transition-all duration-300`}>
+                                  {med.name}
+                                </p>
+                                <p className={`${isCenter ? "text-lg" : "text-sm"} text-muted-foreground transition-all duration-300`}>
+                                  {med.time}
+                                </p>
+                                <p className={`${isCenter ? "text-lg" : "text-sm"} text-muted-foreground transition-all duration-300`}>
+                                  {med.dosage}
+                                </p>
+                              </div>
+                              
+                              {isCenter && (
+                                <Button 
+                                  className="mt-4 w-full group relative overflow-hidden"
+                                  onClick={() => handleMarkAsTaken(med.id)}
+                                >
+                                  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-green-400 to-green-500 transition-transform duration-300 transform translate-y-full group-hover:translate-y-0"></span>
+                                  <span className="relative flex items-center justify-center gap-2 transition-all duration-300 group-hover:text-white">
+                                    <CheckCircle className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
+                                    Mark as Taken
+                                  </span>
+                                </Button>
+                              )}
                             </div>
-                          }
-                          {med.status === "upcoming" && 
-                            <Clock className="w-12 h-12 text-blue-500 animate-fadeIn" />
-                          }
-                          
-                          <h3 className={`${med.status === "current" ? "text-2xl font-bold" : "text-xl font-semibold"} transition-all duration-300`}>
-                            {med.status === "taken" ? "Taken" : med.status === "current" ? "Next Dose" : "Upcoming"}
-                          </h3>
-                          
-                          <div className="text-center">
-                            <p className={`${med.status === "current" ? "text-xl" : "text-lg"} font-medium text-primary transition-all duration-300`}>
-                              {med.name}
-                            </p>
-                            <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-muted-foreground transition-all duration-300`}>
-                              {med.time}
-                            </p>
-                            <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-muted-foreground transition-all duration-300`}>
-                              {med.dosage}
-                            </p>
-                          </div>
-                          
-                          {med.status === "current" && (
-                            <Button 
-                              className="mt-4 w-full group relative overflow-hidden"
-                              onClick={() => handleMarkAsTaken(med.id)}
-                            >
-                              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-green-400 to-green-500 transition-transform duration-300 transform translate-y-full group-hover:translate-y-0"></span>
-                              <span className="relative flex items-center justify-center gap-2 transition-all duration-300 group-hover:text-white">
-                                <CheckCircle className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
-                                Mark as Taken
-                              </span>
-                            </Button>
-                          )}
+                          </Card>
                         </div>
-                      </Card>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
