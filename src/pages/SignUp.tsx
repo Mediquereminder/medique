@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -19,6 +18,11 @@ const SignUp = () => {
     email: "",
     password: "",
     role: "patient",
+    // Adding default values for the new fields
+    gender: "",
+    age: "",
+    height: "",
+    weight: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -46,6 +50,10 @@ const SignUp = () => {
       userId: uniqueId,
       connectedPatients: [],  // For caretakers
       connectedCaretakers: [], // For patients
+      // Convert string values to appropriate types for numeric fields
+      age: formData.age ? Number(formData.age) : undefined,
+      height: formData.height ? Number(formData.height) : undefined,
+      weight: formData.weight ? Number(formData.weight) : undefined,
     };
     
     users.push(newUser);

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Camera, Pencil, LogOut, Menu, UserRound, UserCog, Copy, Check } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface UserProfile {
   name: string;
@@ -17,6 +18,10 @@ interface UserProfile {
   address: string;
   emergencyContact: string;
   profilePic: string;
+  gender?: string;
+  age?: number;
+  height?: number;
+  weight?: number;
 }
 
 const Profile = () => {
@@ -31,6 +36,10 @@ const Profile = () => {
     address: "",
     emergencyContact: "",
     profilePic: "/placeholder.svg", // Using placeholder avatar as default
+    gender: "",
+    age: undefined,
+    height: undefined,
+    weight: undefined,
   });
   const [userRole, setUserRole] = useState<'patient' | 'admin'>('patient');
   const [patientId, setPatientId] = useState("");
@@ -52,6 +61,10 @@ const Profile = () => {
       address: user.address || "",
       emergencyContact: user.emergencyContact || "",
       profilePic: user.profilePic || prev.profilePic,
+      gender: user.gender || "",
+      age: user.age || undefined,
+      height: user.height || undefined,
+      weight: user.weight || undefined,
     }));
   }, [navigate]);
 
@@ -140,6 +153,10 @@ const Profile = () => {
         phone: profile.phone,
         address: profile.address,
         emergencyContact: profile.emergencyContact,
+        gender: profile.gender,
+        age: profile.age,
+        height: profile.height,
+        weight: profile.weight,
         ...(profile.profilePic !== "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=200&h=200&fit=crop" && {
           profilePic: profile.profilePic,
         }),
@@ -338,6 +355,74 @@ const Profile = () => {
                             value={profile.email}
                             disabled
                           />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="grid gap-2">
+                            <Label htmlFor="gender">Gender</Label>
+                            <Select
+                              disabled={!isEditing}
+                              value={profile.gender}
+                              onValueChange={(value) =>
+                                setProfile((prev) => ({ ...prev, gender: value }))
+                              }
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select gender" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="male">Male</SelectItem>
+                                <SelectItem value="female">Female</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
+                                <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="age">Age</Label>
+                            <Input
+                              id="age"
+                              type="number"
+                              value={profile.age || ""}
+                              onChange={(e) =>
+                                setProfile((prev) => ({ ...prev, age: e.target.value ? Number(e.target.value) : undefined }))
+                              }
+                              disabled={!isEditing}
+                              min={0}
+                              max={120}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="grid gap-2">
+                            <Label htmlFor="height">Height (cm)</Label>
+                            <Input
+                              id="height"
+                              type="number"
+                              value={profile.height || ""}
+                              onChange={(e) =>
+                                setProfile((prev) => ({ ...prev, height: e.target.value ? Number(e.target.value) : undefined }))
+                              }
+                              disabled={!isEditing}
+                              min={0}
+                              max={300}
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="weight">Weight (kg)</Label>
+                            <Input
+                              id="weight"
+                              type="number"
+                              value={profile.weight || ""}
+                              onChange={(e) =>
+                                setProfile((prev) => ({ ...prev, weight: e.target.value ? Number(e.target.value) : undefined }))
+                              }
+                              disabled={!isEditing}
+                              min={0}
+                              max={500}
+                            />
+                          </div>
                         </div>
 
                         <div className="grid gap-2">
