@@ -1,9 +1,11 @@
+
 import * as React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
@@ -11,8 +13,15 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  captionLayout = "buttons",
   ...props
 }: CalendarProps) {
+  const [currentYear, setCurrentYear] = React.useState<number>(new Date().getFullYear());
+  const years = React.useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 100 }, (_, i) => currentYear - i);
+  }, []);
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -51,9 +60,38 @@ function Calendar({
         day_hidden: "invisible",
         ...classNames,
       }}
+      captionLayout={captionLayout}
       components={{
-        IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
-        IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
+        IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" {...props} />,
+        IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" {...props} />,
+        Dropdown: ({ value, onChange, children, ...props }: any) => {
+          const options = React.Children.toArray(children) as React.ReactElement[];
+          const handleValueChange = (newValue: string) => {
+            const option = options.find((option) => option.props.value === newValue);
+            if (option) onChange(option.props.value);
+          };
+          
+          return (
+            <Select
+              value={value?.toString()}
+              onValueChange={handleValueChange}
+            >
+              <SelectTrigger className="h-7 px-2 py-1 text-xs bg-white">
+                <SelectValue>{value}</SelectValue>
+              </SelectTrigger>
+              <SelectContent className="max-h-80 bg-white">
+                {options.map((option, id) => (
+                  <SelectItem
+                    key={id}
+                    value={option.props.value?.toString()}
+                  >
+                    {option.props.children}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          );
+        },
       }}
       {...props}
     />
