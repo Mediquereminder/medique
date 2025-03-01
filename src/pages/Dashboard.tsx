@@ -237,7 +237,7 @@ const Dashboard = () => {
                       <Card
                         key={med.id}
                         className={`
-                          w-1/3 p-6 flex-shrink-0 relative overflow-hidden
+                          w-1/3 p-6 flex-shrink-0 relative overflow-hidden border-0
                           ${
                             med.status === "taken"
                               ? "bg-card/90 border-l-4 border-l-green-500" 
