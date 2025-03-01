@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -370,11 +369,9 @@ const Profile = () => {
                               <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Select gender" />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className="bg-white">
                                 <SelectItem value="male">Male</SelectItem>
                                 <SelectItem value="female">Female</SelectItem>
-                                <SelectItem value="other">Other</SelectItem>
-                                <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>

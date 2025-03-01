@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Mail, Lock, User } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const generateUniqueId = () => {
   return Math.random().toString(36).substr(2, 9).toUpperCase();
@@ -138,6 +140,69 @@ const SignUp = () => {
                       setFormData({ ...formData, password: e.target.value })
                     }
                     required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="gender">Gender</Label>
+                <Select
+                  value={formData.gender}
+                  onValueChange={(value) => 
+                    setFormData({ ...formData, gender: value })
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="age">Age</Label>
+                  <Input
+                    id="age"
+                    type="number"
+                    placeholder="30"
+                    value={formData.age}
+                    onChange={(e) =>
+                      setFormData({ ...formData, age: e.target.value })
+                    }
+                    min={0}
+                    max={120}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="height">Height (cm)</Label>
+                  <Input
+                    id="height"
+                    type="number"
+                    placeholder="170"
+                    value={formData.height}
+                    onChange={(e) =>
+                      setFormData({ ...formData, height: e.target.value })
+                    }
+                    min={0}
+                    max={300}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="weight">Weight (kg)</Label>
+                  <Input
+                    id="weight"
+                    type="number"
+                    placeholder="70"
+                    value={formData.weight}
+                    onChange={(e) =>
+                      setFormData({ ...formData, weight: e.target.value })
+                    }
+                    min={0}
+                    max={500}
                   />
                 </div>
               </div>
