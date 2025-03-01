@@ -243,14 +243,12 @@ const Dashboard = () => {
                         key={med.id}
                         className={`
                           w-1/3 p-6 flex-shrink-0 relative overflow-hidden border-0
-                          bg-gradient-to-r from-[#FEF7CD]/60 via-[#FEC6A1]/70 to-[#FEF7CD]/60
-                          backdrop-blur-md
                           ${
                             med.status === "taken"
-                              ? "border-l-4 border-l-green-500" 
+                              ? "bg-card/90 border-l-4 border-l-green-500" 
                               : med.status === "current"
-                              ? "border-l-4 border-l-primary"
-                              : "border-l-4 border-l-blue-400" 
+                              ? "bg-gradient-to-br from-primary/10 to-secondary/10 shadow-xl border-l-4 border-l-primary"
+                              : "bg-card/90 border-l-4 border-l-blue-400" 
                           }
                           ${clickedMedId === med.id ? 'pulse-once scale-105' : ''}
                           transition-all duration-500 ease-in-out
@@ -315,7 +313,7 @@ const Dashboard = () => {
 
                 {/* Medical Fact Section */}
                 <div className="mt-12 text-center max-w-2xl animate-fadeIn" style={{ animationDelay: "400ms" }}>
-                  <div className="bg-gradient-to-r from-accent/50 via-accent to-accent/50 backdrop-blur-sm text-accent-foreground rounded-lg p-6 shadow-sm border border-accent/30 hover-lift">
+                  <div className="bg-accent text-accent-foreground rounded-lg p-6 shadow-sm border border-accent/30 hover-lift">
                     <h3 className="text-lg font-semibold text-primary mb-2">💡 Did you know?</h3>
                     <p className="text-card-foreground">{randomFact}</p>
                   </div>
