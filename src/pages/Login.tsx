@@ -6,42 +6,51 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import LoadingOverlay from "@/components/LoadingOverlay";
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    // Get users from localStorage
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const user = users.find((u: any) => u.email === email && u.password === password);
+    // Simulate network delay
+    setTimeout(() => {
+      // Get users from localStorage
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      const user = users.find((u: any) => u.email === email && u.password === password);
 
-    if (user) {
-      // Store logged in user info
-      localStorage.setItem("currentUser", JSON.stringify(user));
-      
-      toast({
-        title: "Welcome back!",
-        description: "Login successful.",
-      });
+      if (user) {
+        // Store logged in user info
+        localStorage.setItem("currentUser", JSON.stringify(user));
+        
+        toast({
+          title: "Welcome back!",
+          description: "Login successful.",
+        });
 
-      // Redirect based on role
-      navigate(user.role === "admin" ? "/admin-dashboard" : "/dashboard");
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Invalid email or password.",
-      });
-    }
+        // Redirect based on role
+        navigate(user.role === "admin" ? "/admin-dashboard" : "/dashboard");
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Invalid email or password.",
+        });
+        setIsLoading(false);
+      }
+    }, 1500); // Show loading for 1.5 seconds
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/30">
+      <LoadingOverlay visible={isLoading} message="Logging you in..." />
+      
       {/* Back Button */}
       <Link
         to="/"
@@ -75,6 +84,7 @@ const Login = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -91,6 +101,7 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -98,7 +109,7 @@ const Login = () => {
 
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2">
-                <input type="checkbox" className="rounded border-gray-300" />
+                <input type="checkbox" className="rounded border-gray-300" disabled={isLoading} />
                 <span className="text-sm text-muted-foreground">Remember me</span>
               </label>
               <Link
@@ -109,8 +120,8 @@ const Login = () => {
               </Link>
             </div>
 
-            <Button type="submit" className="w-full">
-              Sign in
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Signing in..." : "Sign in"}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">

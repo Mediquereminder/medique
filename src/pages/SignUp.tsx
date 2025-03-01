@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format, differenceInYears } from "date-fns";
 import { cn } from "@/lib/utils";
+import LoadingOverlay from "@/components/LoadingOverlay";
 
 const generateUniqueId = () => {
   return Math.random().toString(36).substr(2, 9).toUpperCase();
@@ -19,6 +19,7 @@ const generateUniqueId = () => {
 const SignUp = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -37,48 +38,55 @@ const SignUp = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    // Store user data in localStorage
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    
-    // Check if email already exists
-    if (users.some((user: any) => user.email === formData.email)) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Email already exists. Please use a different email.",
-      });
-      return;
-    }
+    // Simulate network delay
+    setTimeout(() => {
+      // Store user data in localStorage
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      
+      // Check if email already exists
+      if (users.some((user: any) => user.email === formData.email)) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Email already exists. Please use a different email.",
+        });
+        setIsLoading(false);
+        return;
+      }
 
-    // Generate unique ID
-    const uniqueId = generateUniqueId();
-    
-    // Add new user with unique ID and empty arrays for connected users
-    const newUser = {
-      ...formData,
-      userId: uniqueId,
-      connectedPatients: [],  // For caretakers
-      connectedCaretakers: [], // For patients
-      // Convert string values to appropriate types for numeric fields
-      birthDate: formData.birthDate ? formData.birthDate.toISOString() : undefined,
-      height: formData.height ? Number(formData.height) : undefined,
-      weight: formData.weight ? Number(formData.weight) : undefined,
-    };
-    
-    users.push(newUser);
-    localStorage.setItem("users", JSON.stringify(users));
-    
-    toast({
-      title: "Success!",
-      description: `Account created successfully. Your ${formData.role === 'patient' ? 'Patient' : 'Caretaker'} ID is: ${uniqueId}`,
-    });
-    
-    navigate("/login");
+      // Generate unique ID
+      const uniqueId = generateUniqueId();
+      
+      // Add new user with unique ID and empty arrays for connected users
+      const newUser = {
+        ...formData,
+        userId: uniqueId,
+        connectedPatients: [],  // For caretakers
+        connectedCaretakers: [], // For patients
+        // Convert string values to appropriate types for numeric fields
+        birthDate: formData.birthDate ? formData.birthDate.toISOString() : undefined,
+        height: formData.height ? Number(formData.height) : undefined,
+        weight: formData.weight ? Number(formData.weight) : undefined,
+      };
+      
+      users.push(newUser);
+      localStorage.setItem("users", JSON.stringify(users));
+      
+      toast({
+        title: "Success!",
+        description: `Account created successfully. Your ${formData.role === 'patient' ? 'Patient' : 'Caretaker'} ID is: ${uniqueId}`,
+      });
+      
+      navigate("/login");
+    }, 1500); // Show loading for 1.5 seconds
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/30">
+      <LoadingOverlay visible={isLoading} message="Creating your account..." />
+      
       <Link
         to="/"
         className="fixed top-4 left-4 flex items-center text-muted-foreground hover:text-foreground transition-colors"
@@ -112,6 +120,7 @@ const SignUp = () => {
                       setFormData({ ...formData, name: e.target.value })
                     }
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -130,6 +139,7 @@ const SignUp = () => {
                       setFormData({ ...formData, email: e.target.value })
                     }
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -148,6 +158,7 @@ const SignUp = () => {
                       setFormData({ ...formData, password: e.target.value })
                     }
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -159,6 +170,7 @@ const SignUp = () => {
                   onValueChange={(value) => 
                     setFormData({ ...formData, gender: value })
                   }
+                  disabled={isLoading}
                 >
                   <SelectTrigger className="w-full bg-white">
                     <SelectValue placeholder="Select gender" />
@@ -181,6 +193,7 @@ const SignUp = () => {
                         "w-full justify-start text-left font-normal bg-white",
                         !formData.birthDate && "text-muted-foreground"
                       )}
+                      disabled={isLoading}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {formData.birthDate ? (
@@ -221,6 +234,7 @@ const SignUp = () => {
                     }
                     min={0}
                     max={300}
+                    disabled={isLoading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -235,6 +249,7 @@ const SignUp = () => {
                     }
                     min={0}
                     max={500}
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -251,6 +266,7 @@ const SignUp = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, role: e.target.value })
                       }
+                      disabled={isLoading}
                     />
                     <span>Patient</span>
                   </label>
@@ -263,6 +279,7 @@ const SignUp = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, role: e.target.value })
                       }
+                      disabled={isLoading}
                     />
                     <span>Admin/Care Taker</span>
                   </label>
@@ -270,8 +287,8 @@ const SignUp = () => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full">
-              Create Account
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Creating Account..." : "Create Account"}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
