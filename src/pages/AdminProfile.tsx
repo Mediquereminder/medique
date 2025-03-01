@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -110,7 +109,20 @@ const AdminProfile = () => {
         }),
       };
       
+      // Update currentUser in localStorage
       localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+      
+      // Also update user in the users array
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      const updatedUsers = users.map((user: any) => {
+        if (user.email === updatedUser.email) {
+          return updatedUser;
+        }
+        return user;
+      });
+      
+      // Update users array in localStorage
+      localStorage.setItem("users", JSON.stringify(updatedUsers));
       
       toast({
         title: "Profile Updated",
