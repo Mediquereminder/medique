@@ -32,7 +32,14 @@ const Index = () => {
       {/* Navigation */}
       <nav className="fixed w-full z-50 glass-panel">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <div className="text-2xl font-semibold text-primary">Medique</div>
+          <div className="flex items-center gap-2">
+            <img 
+              src="/lovable-uploads/a1995604-78a6-42f0-a09f-3066fbff9ff7.png" 
+              alt="Medique Logo" 
+              className="h-8 w-auto"
+            />
+            <div className="text-2xl font-semibold text-primary">Medique</div>
+          </div>
           <div className="space-x-4">
             <Button variant="ghost" asChild>
               <Link to="/login" className="button-transition">Login</Link>

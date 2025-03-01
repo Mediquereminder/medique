@@ -13,7 +13,7 @@ export const StockNavbar = ({ onLogout }: StockNavbarProps) => {
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <img 
-            src="/lovable-uploads/94fc513d-b664-4fed-998b-247198b436fb.png" 
+            src="/lovable-uploads/a1995604-78a6-42f0-a09f-3066fbff9ff7.png" 
             alt="Medique Logo" 
             className="h-8 w-auto ml-12"
           />

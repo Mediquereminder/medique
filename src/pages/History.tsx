@@ -85,7 +85,7 @@ const History = () => {
             <div className="container mx-auto px-4 py-4 flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <img 
-                  src="/lovable-uploads/b81c9421-0f7b-46a1-aec0-86a7739c4803.png" 
+                  src="/lovable-uploads/a1995604-78a6-42f0-a09f-3066fbff9ff7.png" 
                   alt="Medique Logo" 
                   className="h-8 w-auto ml-12"
                 />
