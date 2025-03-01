@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -29,7 +30,7 @@ const Profile = () => {
     phone: "",
     address: "",
     emergencyContact: "",
-    profilePic: "https://unsplash.com/photos/a-cartoon-character-with-a-weird-haircut-G2Qjx1y9aAM",
+    profilePic: "/lovable-uploads/94fc513d-b664-4fed-998b-247198b436fb.png",
   });
   const [userRole, setUserRole] = useState<'patient' | 'admin'>('patient');
   const [patientId, setPatientId] = useState("");
