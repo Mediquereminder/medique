@@ -184,8 +184,8 @@ const AdminStock = () => {
           
           <div className="pt-[73px]">
             <main className="container mx-auto px-4 py-8">
-              <div className="grid md:grid-cols-2 gap-6 mb-6">
-                <div>
+              <div className="flex flex-col md:flex-row md:items-end gap-6 mb-6">
+                <div className="w-full md:w-1/2">
                   <Label htmlFor="patient-select" className="mb-2 block">Select Patient</Label>
                   <Select onValueChange={handlePatientChange} value={selectedPatientId}>
                     <SelectTrigger className="w-full">
@@ -201,7 +201,7 @@ const AdminStock = () => {
                   </Select>
                 </div>
                 
-                <div className="flex flex-col justify-end">
+                <div className="w-full md:w-1/2">
                   <SearchBar
                     value={searchQuery}
                     onChange={(value) => setSearchQuery(value)}
