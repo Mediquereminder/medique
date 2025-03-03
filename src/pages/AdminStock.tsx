@@ -184,8 +184,8 @@ const AdminStock = () => {
           
           <div className="pt-[73px]">
             <main className="container mx-auto px-4 py-8">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4">
-                <div className="w-full lg:w-1/4">
+              <div className="grid md:grid-cols-2 gap-6 mb-6">
+                <div>
                   <Label htmlFor="patient-select" className="mb-2 block">Select Patient</Label>
                   <Select onValueChange={handlePatientChange} value={selectedPatientId}>
                     <SelectTrigger className="w-full">
@@ -201,78 +201,78 @@ const AdminStock = () => {
                   </Select>
                 </div>
                 
-                <div className="flex-1 lg:flex lg:items-center gap-4">
-                  <div className="flex-1 mb-4 lg:mb-0">
-                    <SearchBar
-                      value={searchQuery}
-                      onChange={(value) => setSearchQuery(value)}
-                    />
-                  </div>
-                  
-                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="flex items-center gap-2 w-full lg:w-auto">
-                        <Plus className="h-4 w-4" />
+                <div className="flex flex-col justify-end">
+                  <SearchBar
+                    value={searchQuery}
+                    onChange={(value) => setSearchQuery(value)}
+                  />
+                </div>
+              </div>
+              
+              <div className="mb-6">
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="flex items-center gap-2 w-full md:w-auto mb-6">
+                      <Plus className="h-4 w-4" />
+                      Add Medicine
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add New Medicine</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="patient">Patient</Label>
+                        <Select 
+                          value={selectedPatientId} 
+                          onValueChange={setSelectedPatientId}
+                          disabled={!selectedPatientId}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a patient" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {patients.map((patient) => (
+                              <SelectItem key={patient.id} value={patient.id}>
+                                {patient.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="name">Medicine Name</Label>
+                        <Input
+                          id="name"
+                          value={newMedicine.name}
+                          onChange={(e) => setNewMedicine(prev => ({ ...prev, name: e.target.value }))}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="quantity">Initial Quantity</Label>
+                        <Input
+                          id="quantity"
+                          type="number"
+                          value={newMedicine.quantity}
+                          onChange={(e) => setNewMedicine(prev => ({ ...prev, quantity: e.target.value }))}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="threshold">Threshold</Label>
+                        <Input
+                          id="threshold"
+                          type="number"
+                          value={newMedicine.threshold}
+                          onChange={(e) => setNewMedicine(prev => ({ ...prev, threshold: e.target.value }))}
+                        />
+                      </div>
+                      <Button onClick={handleAddMedicine} className="mt-2">
                         Add Medicine
                       </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Add New Medicine</DialogTitle>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        <div className="grid gap-2">
-                          <Label htmlFor="patient">Patient</Label>
-                          <Select 
-                            value={selectedPatientId} 
-                            onValueChange={setSelectedPatientId}
-                            disabled={!selectedPatientId}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a patient" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {patients.map((patient) => (
-                                <SelectItem key={patient.id} value={patient.id}>
-                                  {patient.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="name">Medicine Name</Label>
-                          <Input
-                            id="name"
-                            value={newMedicine.name}
-                            onChange={(e) => setNewMedicine(prev => ({ ...prev, name: e.target.value }))}
-                          />
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="quantity">Initial Quantity</Label>
-                          <Input
-                            id="quantity"
-                            type="number"
-                            value={newMedicine.quantity}
-                            onChange={(e) => setNewMedicine(prev => ({ ...prev, quantity: e.target.value }))}
-                          />
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor="threshold">Threshold</Label>
-                          <Input
-                            id="threshold"
-                            type="number"
-                            value={newMedicine.threshold}
-                            onChange={(e) => setNewMedicine(prev => ({ ...prev, threshold: e.target.value }))}
-                          />
-                        </div>
-                        <Button onClick={handleAddMedicine} className="mt-2">
-                          Add Medicine
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
 
               {selectedPatientId ? (

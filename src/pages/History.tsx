@@ -130,7 +130,7 @@ const History = () => {
                           <SelectValue placeholder="All Patients" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">All Patients</SelectItem>
+                          <SelectItem value="all-patients">All Patients</SelectItem>
                           {patients.map((patient) => (
                             <SelectItem key={patient.id} value={patient.id}>
                               {patient.name}
@@ -146,7 +146,7 @@ const History = () => {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Date</TableHead>
-                          {userRole === "admin" && selectedPatientId === "" && (
+                          {userRole === "admin" && selectedPatientId !== "all-patients" && selectedPatientId === "" && (
                             <TableHead>Patient</TableHead>
                           )}
                           <TableHead>Medicine</TableHead>
@@ -159,7 +159,7 @@ const History = () => {
                           filteredHistory.map((entry) => (
                             <TableRow key={entry.id}>
                               <TableCell>{entry.date}</TableCell>
-                              {userRole === "admin" && selectedPatientId === "" && (
+                              {userRole === "admin" && selectedPatientId !== "all-patients" && selectedPatientId === "" && (
                                 <TableCell>
                                   {patients.find(p => p.id === entry.patientId)?.name || "Unknown"}
                                 </TableCell>
@@ -179,7 +179,7 @@ const History = () => {
                           ))
                         ) : (
                           <TableRow>
-                            <TableCell colSpan={userRole === "admin" && selectedPatientId === "" ? 5 : 4} className="h-24 text-center">
+                            <TableCell colSpan={userRole === "admin" && selectedPatientId !== "all-patients" && selectedPatientId === "" ? 5 : 4} className="h-24 text-center">
                               No history entries found
                             </TableCell>
                           </TableRow>
