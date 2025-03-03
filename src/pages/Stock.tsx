@@ -1,6 +1,7 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,14 +27,16 @@ interface Medicine {
   quantity: number;
   threshold: number;
   expiryDate: string;
+  patientId?: string;
 }
 
 const Stock = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userRole, setUserRole] = useState<'patient' | 'admin'>('patient');
+  const [userId, setUserId] = useState<string>("");
   const [medicines, setMedicines] = useState<Medicine[]>(() => {
-    const saved = localStorage.getItem("medicineStock");
+    const saved = localStorage.getItem("medicationStock");
     return saved ? JSON.parse(saved) : [];
   });
   const [newMedicine, setNewMedicine] = useState<Omit<Medicine, "id">>({
@@ -49,10 +52,11 @@ const Stock = () => {
       navigate("/login");
     }
     setUserRole(user.role || 'patient');
+    setUserId(user.id || "");
   }, [navigate]);
 
   useEffect(() => {
-    localStorage.setItem("medicineStock", JSON.stringify(medicines));
+    localStorage.setItem("medicationStock", JSON.stringify(medicines));
   }, [medicines]);
 
   const handleAddMedicine = () => {
@@ -68,6 +72,7 @@ const Stock = () => {
     const medicine: Medicine = {
       ...newMedicine,
       id: Date.now().toString(),
+      patientId: userId
     };
 
     setMedicines((prev) => [...prev, medicine]);
@@ -102,12 +107,32 @@ const Stock = () => {
           : medicine
       )
     );
+    
+    // Add to history
+    const medicineUpdated = medicines.find(m => m.id === id);
+    if (medicineUpdated) {
+      const historyEntry = {
+        id: Date.now().toString(),
+        action: change > 0 ? "Added" : "Taken",
+        date: new Date().toISOString().split('T')[0],
+        medicine: medicineUpdated.name,
+        quantity: change > 0 ? `+${change}` : `${change}`,
+        patientId: userId
+      };
+      
+      const savedHistory = localStorage.getItem("medicationHistory");
+      const history = savedHistory ? JSON.parse(savedHistory) : [];
+      localStorage.setItem("medicationHistory", JSON.stringify([...history, historyEntry]));
+    }
   };
 
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
     navigate("/login");
   };
+
+  // Filter medicines for the current patient
+  const userMedicines = medicines.filter(med => med.patientId === userId);
 
   return (
     <SidebarProvider defaultOpen={false}>
@@ -229,7 +254,7 @@ const Stock = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="grid gap-4">
-                      {medicines.map((medicine) => {
+                      {userMedicines.map((medicine) => {
                         const isLow = medicine.quantity <= medicine.threshold;
                         const isExpiringSoon =
                           new Date(medicine.expiryDate) <=
@@ -314,7 +339,7 @@ const Stock = () => {
                           </div>
                         );
                       })}
-                      {medicines.length === 0 && (
+                      {userMedicines.length === 0 && (
                         <div className="text-center py-12 text-muted-foreground">
                           <Package className="w-12 h-12 mx-auto mb-4 text-primary/40" />
                           <p>No medicines in stock.</p>
