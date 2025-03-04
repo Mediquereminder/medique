@@ -21,6 +21,8 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface HistoryEntry {
   id: string;
@@ -37,6 +39,14 @@ interface Patient {
   email: string;
 }
 
+// Group medications by date for the sublist view
+interface GroupedHistory {
+  date: string;
+  entries: HistoryEntry[];
+  patientId: string;
+  isExpanded?: boolean;
+}
+
 const dummyHistory: HistoryEntry[] = [
   {
     id: "1",
@@ -49,7 +59,7 @@ const dummyHistory: HistoryEntry[] = [
   {
     id: "2",
     action: "Taken",
-    date: "2024-03-14",
+    date: "2024-03-15",
     medicine: "Vitamin C",
     quantity: "-2",
     patientId: "p1",
@@ -61,6 +71,22 @@ const dummyHistory: HistoryEntry[] = [
     medicine: "Paracetamol",
     quantity: "+25",
     patientId: "p2",
+  },
+  {
+    id: "4",
+    action: "Taken", 
+    date: "2024-03-15",
+    medicine: "Ibuprofen",
+    quantity: "-1",
+    patientId: "p1",
+  },
+  {
+    id: "5",
+    action: "Taken",
+    date: "2024-03-14",
+    medicine: "Vitamin D",
+    quantity: "-1",
+    patientId: "p1",
   },
 ];
 
@@ -83,6 +109,7 @@ const History = () => {
   });
   
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
+  const [groupedHistory, setGroupedHistory] = useState<GroupedHistory[]>([]);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -97,14 +124,61 @@ const History = () => {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    // Filter history based on selected patient
+    const filteredHistory = history.filter(entry => 
+      !selectedPatientId || entry.patientId === selectedPatientId
+    );
+    
+    // Group history entries by date
+    const grouped = filteredHistory.reduce<GroupedHistory[]>((acc, entry) => {
+      const existingGroup = acc.find(group => group.date === entry.date);
+      if (existingGroup) {
+        existingGroup.entries.push(entry);
+      } else {
+        acc.push({ 
+          date: entry.date, 
+          entries: [entry], 
+          patientId: entry.patientId,
+          isExpanded: true // Default to expanded
+        });
+      }
+      return acc;
+    }, []);
+    
+    // Sort groups by date (newest first)
+    const sortedGroups = grouped.sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    
+    setGroupedHistory(sortedGroups);
+  }, [history, selectedPatientId]);
+
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
     navigate("/login");
   };
 
-  const filteredHistory = history.filter(entry => 
-    !selectedPatientId || entry.patientId === selectedPatientId
-  );
+  const toggleExpand = (date: string) => {
+    setGroupedHistory(prev => 
+      prev.map(group => 
+        group.date === date 
+          ? { ...group, isExpanded: !group.isExpanded } 
+          : group
+      )
+    );
+  };
+
+  // Format date to a more readable format
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
 
   return (
     <SidebarProvider defaultOpen={false}>
@@ -145,41 +219,82 @@ const History = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead width="60px"></TableHead>
                           <TableHead>Date</TableHead>
                           {userRole === "admin" && selectedPatientId === "" && (
                             <TableHead>Patient</TableHead>
                           )}
-                          <TableHead>Medicine</TableHead>
-                          <TableHead>Action</TableHead>
-                          <TableHead>Quantity</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredHistory.length > 0 ? (
-                          filteredHistory.map((entry) => (
-                            <TableRow key={entry.id}>
-                              <TableCell>{entry.date}</TableCell>
-                              {userRole === "admin" && selectedPatientId === "" && (
-                                <TableCell>
-                                  {patients.find(p => p.id === entry.patientId)?.name || "Unknown"}
-                                </TableCell>
-                              )}
-                              <TableCell>{entry.medicine}</TableCell>
-                              <TableCell>{entry.action}</TableCell>
-                              <TableCell 
-                                className={
-                                  entry.quantity.startsWith("+") 
-                                    ? "text-green-600" 
-                                    : "text-red-600"
-                                }
+                        {groupedHistory.length > 0 ? (
+                          groupedHistory.map((group) => (
+                            <React.Fragment key={group.date}>
+                              <TableRow 
+                                className="cursor-pointer hover:bg-accent/50"
+                                onClick={() => toggleExpand(group.date)}
                               >
-                                {entry.quantity}
-                              </TableCell>
-                            </TableRow>
+                                <TableCell>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                                    {group.isExpanded ? (
+                                      <ChevronDown className="h-4 w-4" />
+                                    ) : (
+                                      <ChevronRight className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                </TableCell>
+                                <TableCell className="font-medium">
+                                  {formatDate(group.date)}
+                                </TableCell>
+                                {userRole === "admin" && selectedPatientId === "" && (
+                                  <TableCell>
+                                    {patients.find(p => p.id === group.patientId)?.name || "Unknown"}
+                                  </TableCell>
+                                )}
+                              </TableRow>
+                              
+                              {group.isExpanded && (
+                                <TableRow>
+                                  <TableCell colSpan={userRole === "admin" && selectedPatientId === "" ? 3 : 2}>
+                                    <div className="pl-10 py-2">
+                                      <Table className="border-0">
+                                        <TableHeader>
+                                          <TableRow>
+                                            <TableHead>Medicine</TableHead>
+                                            <TableHead>Action</TableHead>
+                                            <TableHead>Quantity</TableHead>
+                                          </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                          {group.entries.map(entry => (
+                                            <TableRow key={entry.id}>
+                                              <TableCell>{entry.medicine}</TableCell>
+                                              <TableCell>{entry.action}</TableCell>
+                                              <TableCell 
+                                                className={
+                                                  entry.quantity.startsWith("+") 
+                                                    ? "text-green-600" 
+                                                    : "text-red-600"
+                                                }
+                                              >
+                                                {entry.quantity}
+                                              </TableCell>
+                                            </TableRow>
+                                          ))}
+                                        </TableBody>
+                                      </Table>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              )}
+                            </React.Fragment>
                           ))
                         ) : (
                           <TableRow>
-                            <TableCell colSpan={userRole === "admin" && selectedPatientId === "" ? 5 : 4} className="h-24 text-center">
+                            <TableCell 
+                              colSpan={userRole === "admin" && selectedPatientId === "" ? 3 : 2} 
+                              className="h-24 text-center"
+                            >
                               No history entries found
                             </TableCell>
                           </TableRow>
