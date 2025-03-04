@@ -108,10 +108,13 @@ export const MedicationCarousel = ({
       >
         <motion.div
           drag={isCarouselActive ? "x" : false}
-          className="relative flex h-full origin-center cursor-grab justify-center active:cursor-grabbing"
+          className={`
+            relative flex h-full origin-center cursor-grab justify-center active:cursor-grabbing
+            transition-all duration-600 ease-in-out
+            ${animating ? 'transform -translate-x-[calc(100%/3+1rem)]' : ''}
+          `}
           style={{
             transform,
-            rotateY: rotation,
             width: cylinderWidth,
             transformStyle: "preserve-3d",
           }}
@@ -132,10 +135,6 @@ export const MedicationCarousel = ({
             })
           }
           animate={controls}
-          className={`
-            transition-all duration-600 ease-in-out
-            ${animating ? 'transform -translate-x-[calc(100%/3+1rem)]' : ''}
-          `}
         >
           {timelineMeds.map((med, i) => (
             <motion.div

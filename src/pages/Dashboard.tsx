@@ -26,42 +26,42 @@ const initialMedications = [
     name: "Aspirin",
     time: "2 hours ago",
     dosage: "1 tablet",
-    status: "taken",
+    status: "taken" as const,
   },
   {
     id: 2,
     name: "Vitamin C",
     time: "1 hour ago",
     dosage: "2 tablets",
-    status: "taken",
+    status: "taken" as const,
   },
   {
     id: 3,
     name: "Paracetamol",
     time: "In 30 minutes",
     dosage: "2 tablets",
-    status: "current",
+    status: "current" as const,
   },
   {
     id: 4,
     name: "Vitamin D",
     time: "In 3 hours",
     dosage: "1 capsule",
-    status: "upcoming",
+    status: "upcoming" as const,
   },
   {
     id: 5,
     name: "Iron Supplement",
     time: "In 5 hours",
     dosage: "1 tablet",
-    status: "upcoming",
+    status: "upcoming" as const,
   },
   {
     id: 6,
     name: "Omega-3",
     time: "In 8 hours",
     dosage: "2 capsules",
-    status: "upcoming",
+    status: "upcoming" as const,
   },
 ];
 
@@ -71,7 +71,7 @@ const Dashboard = () => {
   const [medications, setMedications] = useState(initialMedications);
   const [timelinePosition, setTimelinePosition] = useState(0);
   const [animating, setAnimating] = useState(false);
-  const [clickedMedId, setClickedMedId] = useState(null);
+  const [clickedMedId, setClickedMedId] = useState<number | null>(null);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -86,7 +86,7 @@ const Dashboard = () => {
     setRandomFact(medicalFacts[randomIndex]);
   }, [navigate]);
 
-  const handleMarkAsTaken = (id) => {
+  const handleMarkAsTaken = (id: number) => {
     // Set the clicked medication ID for targeted animation
     setClickedMedId(id);
     
@@ -97,7 +97,7 @@ const Dashboard = () => {
     setTimeout(() => {
       // Update medications list
       const updatedMedications = medications.map(med => 
-        med.id === id ? { ...med, status: "taken", time: "Just now" } : med
+        med.id === id ? { ...med, status: "taken" as const, time: "Just now" } : med
       );
       
       // Move timeline position to the right
