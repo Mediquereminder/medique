@@ -26,7 +26,6 @@ import { Button } from "@/components/ui/button";
 
 interface HistoryEntry {
   id: string;
-  action: string;
   date: string;
   medicine: string;
   quantity: string;
@@ -50,42 +49,37 @@ interface GroupedHistory {
 const dummyHistory: HistoryEntry[] = [
   {
     id: "1",
-    action: "Added",
     date: "2024-03-15",
     medicine: "Aspirin",
-    quantity: "+50",
+    quantity: "1",
     patientId: "p1",
   },
   {
     id: "2",
-    action: "Taken",
     date: "2024-03-15",
     medicine: "Vitamin C",
-    quantity: "-2",
+    quantity: "2",
     patientId: "p1",
   },
   {
     id: "3",
-    action: "Added",
     date: "2024-03-13",
     medicine: "Paracetamol",
-    quantity: "+25",
+    quantity: "1",
     patientId: "p2",
   },
   {
     id: "4",
-    action: "Taken", 
     date: "2024-03-15",
     medicine: "Ibuprofen",
-    quantity: "-1",
+    quantity: "1",
     patientId: "p1",
   },
   {
     id: "5",
-    action: "Taken",
     date: "2024-03-14",
     medicine: "Vitamin D",
-    quantity: "-1",
+    quantity: "1",
     patientId: "p1",
   },
 ];
@@ -261,24 +255,14 @@ const History = () => {
                                         <TableHeader>
                                           <TableRow>
                                             <TableHead>Medicine</TableHead>
-                                            <TableHead>Action</TableHead>
-                                            <TableHead>Quantity</TableHead>
+                                            <TableHead>Quantity Taken</TableHead>
                                           </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                           {group.entries.map(entry => (
                                             <TableRow key={entry.id}>
                                               <TableCell>{entry.medicine}</TableCell>
-                                              <TableCell>{entry.action}</TableCell>
-                                              <TableCell 
-                                                className={
-                                                  entry.quantity.startsWith("+") 
-                                                    ? "text-green-600" 
-                                                    : "text-red-600"
-                                                }
-                                              >
-                                                {entry.quantity}
-                                              </TableCell>
+                                              <TableCell>{entry.quantity}</TableCell>
                                             </TableRow>
                                           ))}
                                         </TableBody>

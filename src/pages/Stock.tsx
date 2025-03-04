@@ -108,21 +108,27 @@ const Stock = () => {
       )
     );
     
-    // Add to history
-    const medicineUpdated = medicines.find(m => m.id === id);
-    if (medicineUpdated) {
-      const historyEntry = {
-        id: Date.now().toString(),
-        action: change > 0 ? "Added" : "Taken",
-        date: new Date().toISOString().split('T')[0],
-        medicine: medicineUpdated.name,
-        quantity: change > 0 ? `+${change}` : `${change}`,
-        patientId: userId
-      };
-      
-      const savedHistory = localStorage.getItem("medicationHistory");
-      const history = savedHistory ? JSON.parse(savedHistory) : [];
-      localStorage.setItem("medicationHistory", JSON.stringify([...history, historyEntry]));
+    // Only add to history if medicine is taken (quantity decreases)
+    if (change < 0) {
+      const medicineUpdated = medicines.find(m => m.id === id);
+      if (medicineUpdated) {
+        const historyEntry = {
+          id: Date.now().toString(),
+          date: new Date().toISOString().split('T')[0],
+          medicine: medicineUpdated.name,
+          quantity: Math.abs(change).toString(),
+          patientId: medicineUpdated.patientId || userId
+        };
+        
+        const savedHistory = localStorage.getItem("medicationHistory");
+        const history = savedHistory ? JSON.parse(savedHistory) : [];
+        localStorage.setItem("medicationHistory", JSON.stringify([...history, historyEntry]));
+        
+        toast({
+          title: "Medicine Taken",
+          description: `${Math.abs(change)} ${medicineUpdated.name} ${Math.abs(change) > 1 ? 'pills have' : 'pill has'} been taken.`,
+        });
+      }
     }
   };
 
