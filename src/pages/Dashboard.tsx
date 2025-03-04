@@ -2,10 +2,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, Menu, Clock, CheckCircle, Timer, ArrowLeft, ArrowRight } from "lucide-react";
+import { LogOut, Menu, ArrowLeft, ArrowRight } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Card } from "@/components/ui/card";
+import { MedicationCarousel } from "@/components/MedicationCarousel";
 
 // Sample medical facts
 const medicalFacts = [
@@ -110,60 +110,10 @@ const Dashboard = () => {
     }, 600); // Slightly longer to match animation duration
   };
 
-  // Get medications for the timeline based on current position
-  const getTimelineMedications = () => {
-    const takenMeds = medications.filter(med => med.status === "taken");
-    const currentMed = medications.find(med => med.status === "current");
-    const upcomingMeds = medications.filter(med => med.status === "upcoming");
-    
-    // Determine which medications to display based on timeline position
-    let displayMeds = [];
-    
-    // Always try to show one taken, one current, and one upcoming medication
-    if (timelinePosition < takenMeds.length) {
-      // Show a taken medication on the left
-      displayMeds.push(takenMeds[takenMeds.length - 1 - timelinePosition]);
-    }
-    
-    // Show the current medication in the middle (if there is one)
-    if (currentMed) {
-      displayMeds.push(currentMed);
-    }
-    
-    // Show an upcoming medication on the right
-    if (upcomingMeds.length > 0 && timelinePosition < upcomingMeds.length) {
-      displayMeds.push(upcomingMeds[timelinePosition]);
-    }
-    
-    // If we don't have 3 medications to show, add more upcoming ones
-    while (displayMeds.length < 3 && upcomingMeds.length > displayMeds.filter(med => med.status === "upcoming").length) {
-      const nextIndex = displayMeds.filter(med => med.status === "upcoming").length;
-      if (upcomingMeds[nextIndex]) {
-        displayMeds.push(upcomingMeds[nextIndex]);
-      } else {
-        break;
-      }
-    }
-    
-    // If we still don't have 3 medications, add more taken ones
-    while (displayMeds.length < 3 && takenMeds.length > displayMeds.filter(med => med.status === "taken").length) {
-      const nextIndex = displayMeds.filter(med => med.status === "taken").length;
-      if (takenMeds[nextIndex]) {
-        displayMeds.push(takenMeds[nextIndex]);
-      } else {
-        break;
-      }
-    }
-    
-    return displayMeds;
-  };
-
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
     navigate("/login");
   };
-
-  const timelineMeds = getTimelineMedications();
 
   return (
     <SidebarProvider>
@@ -228,88 +178,14 @@ const Dashboard = () => {
                   </Button>
                 </div>
                 
-                {/* Smooth Timeline Slider */}
-                <div className="w-full max-w-5xl mx-auto relative overflow-hidden py-12 rounded-xl" style={{ perspective: "1000px" }}>
-                  <div 
-                    className={`
-                      flex gap-8 justify-center w-full
-                      transition-all duration-600 ease-in-out
-                      ${animating ? 'transform -translate-x-[calc(100%/3+1rem)]' : ''}
-                    `}
-                    style={{ transformStyle: "preserve-3d" }}
-                  >
-                    {timelineMeds.map((med) => (
-                      <Card
-                        key={med.id}
-                        className={`
-                          w-1/3 p-6 flex-shrink-0 relative overflow-hidden border-0
-                          ${
-                            med.status === "taken"
-                              ? "bg-card/90 border-l-4 border-l-green-500" 
-                              : med.status === "current"
-                              ? "bg-gradient-to-br from-primary/10 to-secondary/10 shadow-xl border-l-4 border-l-primary"
-                              : "bg-card/90 border-l-4 border-l-blue-400" 
-                          }
-                          ${clickedMedId === med.id ? 'pulse-once scale-105' : ''}
-                          transition-all duration-500 ease-in-out
-                          hover:shadow-2xl hover:-translate-y-2 hover:scale-105
-                          before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r 
-                          before:from-transparent before:via-white/10 before:to-transparent 
-                          before:translate-x-[-100%] before:skew-x-[-20deg] before:animate-shimmer
-                        `}
-                        style={{
-                          boxShadow: med.status === "current" 
-                            ? "0 10px 25px -5px rgba(79, 209, 197, 0.3)" 
-                            : "",
-                        }}
-                      >
-                        <div className="flex flex-col items-center gap-4 relative z-10">
-                          {med.status === "taken" && 
-                            <CheckCircle className="w-12 h-12 text-green-500 animate-fadeIn" />
-                          }
-                          {med.status === "current" && 
-                            <div className="relative">
-                              <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping"></div>
-                              <Timer className="w-16 h-16 text-primary relative z-10" />
-                            </div>
-                          }
-                          {med.status === "upcoming" && 
-                            <Clock className="w-12 h-12 text-blue-500 animate-fadeIn" />
-                          }
-                          
-                          <h3 className={`${med.status === "current" ? "text-2xl font-bold" : "text-xl font-semibold"} transition-all duration-300`}>
-                            {med.status === "taken" ? "Taken" : med.status === "current" ? "Next Dose" : "Upcoming"}
-                          </h3>
-                          
-                          <div className="text-center">
-                            <p className={`${med.status === "current" ? "text-xl" : "text-lg"} font-medium text-primary transition-all duration-300`}>
-                              {med.name}
-                            </p>
-                            <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-muted-foreground transition-all duration-300`}>
-                              {med.time}
-                            </p>
-                            <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-muted-foreground transition-all duration-300`}>
-                              {med.dosage}
-                            </p>
-                          </div>
-                          
-                          {med.status === "current" && (
-                            <Button 
-                              className="mt-4 w-full group relative overflow-hidden"
-                              onClick={() => handleMarkAsTaken(med.id)}
-                            >
-                              <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-green-400 to-green-500 transition-transform duration-300 transform translate-y-full group-hover:translate-y-0"></span>
-                              <span className="relative flex items-center justify-center gap-2 transition-all duration-300 group-hover:text-white">
-                                <CheckCircle className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
-                                Mark as Taken
-                              </span>
-                            </Button>
-                          )}
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
+                {/* 3D Medication Carousel */}
+                <MedicationCarousel 
+                  medications={medications}
+                  timelinePosition={timelinePosition}
+                  onMarkAsTaken={handleMarkAsTaken}
+                  animating={animating}
+                  clickedMedId={clickedMedId}
+                />
 
                 {/* Medical Fact Section */}
                 <div className="mt-12 text-center max-w-2xl animate-fadeIn" style={{ animationDelay: "400ms" }}>
