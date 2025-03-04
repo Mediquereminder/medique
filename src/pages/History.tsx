@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -219,7 +219,7 @@ const History = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead width="60px"></TableHead>
+                          <TableHead className="w-[60px]"></TableHead>
                           <TableHead>Date</TableHead>
                           {userRole === "admin" && selectedPatientId === "" && (
                             <TableHead>Patient</TableHead>
@@ -229,7 +229,7 @@ const History = () => {
                       <TableBody>
                         {groupedHistory.length > 0 ? (
                           groupedHistory.map((group) => (
-                            <React.Fragment key={group.date}>
+                            <Fragment key={group.date}>
                               <TableRow 
                                 className="cursor-pointer hover:bg-accent/50"
                                 onClick={() => toggleExpand(group.date)}
@@ -287,7 +287,7 @@ const History = () => {
                                   </TableCell>
                                 </TableRow>
                               )}
-                            </React.Fragment>
+                            </Fragment>
                           ))
                         ) : (
                           <TableRow>
