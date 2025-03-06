@@ -17,9 +17,15 @@ import {
   Calendar,
   Package,
   Shield,
+  Clock
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { StockNavbar } from "@/components/stock/StockNavbar";
+import { 
+  markMedicationTaken, 
+  MedicationSchedule 
+} from "@/utils/medicationService";
+import { format, parseISO, isToday } from "date-fns";
 
 interface Medicine {
   id: string;
@@ -35,10 +41,8 @@ const Stock = () => {
   const { toast } = useToast();
   const [userRole, setUserRole] = useState<'patient' | 'admin'>('patient');
   const [userId, setUserId] = useState<string>("");
-  const [medicines, setMedicines] = useState<Medicine[]>(() => {
-    const saved = localStorage.getItem("medicationStock");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [medicines, setMedicines] = useState<Medicine[]>([]);
+  const [schedules, setSchedules] = useState<any[]>([]);
   const [newMedicine, setNewMedicine] = useState<Omit<Medicine, "id">>({
     name: "",
     quantity: 0,
@@ -52,8 +56,53 @@ const Stock = () => {
       navigate("/login");
     }
     setUserRole(user.role || 'patient');
-    setUserId(user.id || "");
+    setUserId(user.userId || "");
+    
+    // Load medicines
+    const savedStock = localStorage.getItem("medicationStock");
+    const stockData = savedStock ? JSON.parse(savedStock) : [];
+    setMedicines(stockData);
+    
+    // Load medication schedules
+    loadSchedules(user.userId);
+    
+    // Set up interval to refresh schedules
+    const interval = setInterval(() => {
+      loadSchedules(user.userId);
+    }, 60000); // Check every minute
+    
+    return () => clearInterval(interval);
   }, [navigate]);
+
+  const loadSchedules = (userId: string) => {
+    const scheduleData = JSON.parse(localStorage.getItem("medicationSchedules") || "[]");
+    const medications = JSON.parse(localStorage.getItem("medications") || "[]");
+    
+    // Filter schedules for today and this user
+    const today = new Date().toISOString().split('T')[0];
+    const userSchedules = scheduleData
+      .filter((schedule: MedicationSchedule) => 
+        schedule.patientId === userId && 
+        schedule.scheduledTime.startsWith(today)
+      )
+      .map((schedule: MedicationSchedule) => {
+        const medication = medications.find((med: any) => med.id === schedule.medicationId);
+        return {
+          id: schedule.id,
+          medicine: medication?.name || "Unknown",
+          dosage: medication?.dosage || "1 tablet",
+          time: format(parseISO(schedule.scheduledTime), "h:mm a"),
+          scheduledTime: schedule.scheduledTime,
+          taken: schedule.taken,
+          skipped: schedule.skipped
+        };
+      })
+      .sort((a: any, b: any) => 
+        new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime()
+      );
+    
+    setSchedules(userSchedules);
+  };
 
   useEffect(() => {
     localStorage.setItem("medicationStock", JSON.stringify(medicines));
@@ -132,6 +181,19 @@ const Stock = () => {
       }
     }
   };
+  
+  const handleMarkTaken = (scheduleId: string) => {
+    const result = markMedicationTaken(scheduleId);
+    if (result) {
+      toast({
+        title: "Medication Taken",
+        description: "Your medication has been marked as taken."
+      });
+      
+      // Refresh schedules
+      loadSchedules(userId);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
@@ -165,6 +227,75 @@ const Stock = () => {
                     <span>{userRole === 'patient' ? 'View Only Mode' : 'Full Access Mode'}</span>
                   </div>
                 </div>
+                
+                {/* Today's Medication Schedule */}
+                <Card className="border-2 border-primary/20 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Clock className="w-5 h-5 text-primary" />
+                      Today's Medication Schedule
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {schedules.length > 0 ? (
+                      <div className="grid gap-4">
+                        {schedules.map((schedule) => (
+                          <div 
+                            key={schedule.id} 
+                            className={`
+                              p-4 rounded-lg border-2 flex items-center justify-between
+                              ${schedule.taken 
+                                ? 'bg-green-50 border-green-200' 
+                                : isTimeNearby(schedule.scheduledTime) 
+                                  ? 'bg-primary/5 border-primary/20 animate-pulse' 
+                                  : 'bg-white border-gray-200'}
+                            `}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`
+                                p-3 rounded-full 
+                                ${schedule.taken 
+                                  ? 'bg-green-100 text-green-600'
+                                  : isTimeNearby(schedule.scheduledTime)
+                                    ? 'bg-primary/10 text-primary animate-bounce'
+                                    : 'bg-gray-100 text-gray-600'}
+                              `}>
+                                <Pill className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <h3 className="font-medium">{schedule.medicine}</h3>
+                                <p className="text-sm text-muted-foreground">
+                                  {schedule.dosage} at {schedule.time}
+                                </p>
+                              </div>
+                            </div>
+                            {!schedule.taken && !schedule.skipped && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                className="hover:bg-green-50 hover:text-green-600"
+                                onClick={() => handleMarkTaken(schedule.id)}
+                              >
+                                Mark as Taken
+                              </Button>
+                            )}
+                            {schedule.taken && (
+                              <div className="px-3 py-1 bg-green-100 text-green-600 rounded-full text-sm flex items-center gap-1">
+                                <CheckCircle className="w-4 h-4" />
+                                Taken
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <Clock className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                        <p className="text-lg text-muted-foreground">No medications scheduled for today</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
                 {/* Add New Medicine - Only visible to caretakers */}
                 {userRole !== 'patient' && (
@@ -365,6 +496,15 @@ const Stock = () => {
       </div>
     </SidebarProvider>
   );
+};
+
+// Helper function to check if a scheduled time is nearby (within 15 minutes)
+const isTimeNearby = (scheduledTime: string) => {
+  const now = new Date();
+  const scheduled = parseISO(scheduledTime);
+  const diffMinutes = Math.abs((scheduled.getTime() - now.getTime()) / (1000 * 60));
+  
+  return diffMinutes <= 15 && isToday(scheduled);
 };
 
 export default Stock;

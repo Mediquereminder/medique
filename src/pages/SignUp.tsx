@@ -12,12 +12,13 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
 import { nanoid } from "nanoid";
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -106,7 +107,8 @@ const SignUp = () => {
       medications: [],
       allergies: [],
       conditions: [],
-      history: []
+      history: [],
+      notifications: []
     };
 
     // Add user to "database"

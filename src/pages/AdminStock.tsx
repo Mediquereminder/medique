@@ -1,10 +1,10 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { Calendar, Clock, Plus, Trash2, AlertTriangle, Eye, Pill, Package, Shield } from "lucide-react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { StockCard } from "@/components/stock/StockCard";
 import { SearchBar } from "@/components/stock/SearchBar";
@@ -25,11 +25,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { addMedication } from "@/utils/medicationService";
 
 interface Patient {
   id: string;
   name: string;
   email: string;
+  userId: string;
 }
 
 interface MedicationStock {
@@ -39,66 +41,78 @@ interface MedicationStock {
   threshold: number;
   lastUpdated: string;
   patientId: string;
+  expiryDate?: string;
 }
 
-const initialPatients: Patient[] = [
-  { id: "p1", name: "John Doe", email: "john@example.com" },
-  { id: "p2", name: "Jane Smith", email: "jane@example.com" },
-];
-
-const initialStock: MedicationStock[] = [
-  {
-    id: "1",
-    name: "Aspirin",
-    quantity: 150,
-    threshold: 50,
-    lastUpdated: "2024-03-15",
-    patientId: "p1",
-  },
-  {
-    id: "2",
-    name: "Vitamin C",
-    quantity: 75,
-    threshold: 30,
-    lastUpdated: "2024-03-14",
-    patientId: "p1",
-  },
-  {
-    id: "3",
-    name: "Paracetamol",
-    quantity: 25,
-    threshold: 40,
-    lastUpdated: "2024-03-13",
-    patientId: "p2",
-  },
+const frequencyOptions = [
+  { value: "daily", label: "Once Daily" },
+  { value: "twice-daily", label: "Twice Daily" }, 
+  { value: "weekly", label: "Weekly" }
 ];
 
 const AdminStock = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [patients, setPatients] = useState<Patient[]>(() => {
-    const savedPatients = localStorage.getItem("patients");
-    return savedPatients ? JSON.parse(savedPatients) : initialPatients;
-  });
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
-  const [stock, setStock] = useState<MedicationStock[]>(() => {
-    const savedStock = localStorage.getItem("medicationStock");
-    return savedStock ? JSON.parse(savedStock) : initialStock;
-  });
+  const [stock, setStock] = useState<MedicationStock[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [newMedicine, setNewMedicine] = useState({
     name: "",
     quantity: "",
     threshold: "",
+    expiryDate: ""
   });
+  
+  const [newMedication, setNewMedication] = useState({
+    name: "",
+    dosage: "",
+    frequency: "daily",
+    time: "08:00",
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: "",
+    description: ""
+  });
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isMedicationDialogOpen, setIsMedicationDialogOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>({});
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
     if (!user.email || user.role !== "admin") {
       navigate("/login");
     }
+    setCurrentUser(user);
+    
+    // Load patients
+    loadPatients(user);
+    
+    // Load stock
+    const savedStock = localStorage.getItem("medicationStock");
+    const initialStock = savedStock ? JSON.parse(savedStock) : [];
+    setStock(initialStock);
   }, [navigate]);
+  
+  const loadPatients = (user: any) => {
+    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
+    
+    // Get connected patients for this caretaker
+    const connectedPatientIds = user.connectedPatients || [];
+    
+    // Filter for only connected patients
+    const patientList = allUsers
+      .filter((u: any) => u.role === "patient" && 
+        (connectedPatientIds.includes(u.userId) || user.role === "admin"))
+      .map((u: any) => ({
+        id: u.userId,
+        name: u.name,
+        email: u.email,
+        userId: u.userId
+      }));
+    
+    setPatients(patientList);
+  };
 
   useEffect(() => {
     // Save stock to localStorage whenever it changes
@@ -123,10 +137,32 @@ const AdminStock = () => {
       )
     );
 
-    toast({
-      title: "Stock Updated",
-      description: "Medication stock has been successfully updated.",
-    });
+    const medicineUpdated = stock.find(m => m.id === id);
+    if (medicineUpdated && change < 0) {
+      // Only add to history if medicine is taken (quantity decreases)
+      const historyEntry = {
+        id: Date.now().toString(),
+        date: new Date().toISOString().split('T')[0],
+        medicine: medicineUpdated.name,
+        quantity: Math.abs(change).toString(),
+        patientId: medicineUpdated.patientId,
+        taken: true // Set taken to true when medication is taken
+      };
+      
+      const savedHistory = localStorage.getItem("medicationHistory");
+      const history = savedHistory ? JSON.parse(savedHistory) : [];
+      localStorage.setItem("medicationHistory", JSON.stringify([...history, historyEntry]));
+      
+      toast({
+        title: "Medicine Taken",
+        description: `${Math.abs(change)} ${medicineUpdated.name} ${Math.abs(change) > 1 ? 'pills have' : 'pill has'} been taken.`,
+      });
+    } else {
+      toast({
+        title: "Stock Updated",
+        description: "Medication stock has been successfully updated.",
+      });
+    }
   };
 
   const handleAddMedicine = () => {
@@ -146,15 +182,78 @@ const AdminStock = () => {
       threshold: parseInt(newMedicine.threshold),
       lastUpdated: new Date().toISOString().split("T")[0],
       patientId: selectedPatientId,
+      expiryDate: newMedicine.expiryDate
     };
 
     setStock((prev) => [...prev, newItem]);
-    setNewMedicine({ name: "", quantity: "", threshold: "" });
+    setNewMedicine({ name: "", quantity: "", threshold: "", expiryDate: "" });
     setIsDialogOpen(false);
 
     toast({
       title: "Medicine Added",
       description: `New medicine has been added to ${patients.find(p => p.id === selectedPatientId)?.name}'s inventory.`,
+    });
+  };
+  
+  const handleAddMedication = () => {
+    if (!newMedication.name || !newMedication.dosage || !selectedPatientId) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields and select a patient",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Add medication to the schedule
+    const medication = {
+      name: newMedication.name,
+      dosage: newMedication.dosage,
+      frequency: newMedication.frequency,
+      time: newMedication.time,
+      startDate: newMedication.startDate,
+      endDate: newMedication.endDate || undefined,
+      description: newMedication.description || undefined,
+      patientId: selectedPatientId,
+      createdBy: currentUser.userId
+    };
+    
+    addMedication(medication);
+    
+    // Also add to medication stock if not already there
+    const existingStock = stock.find(item => 
+      item.name.toLowerCase() === newMedication.name.toLowerCase() && 
+      item.patientId === selectedPatientId
+    );
+    
+    if (!existingStock) {
+      const newItem: MedicationStock = {
+        id: Date.now().toString() + "-stock",
+        name: newMedication.name,
+        quantity: 30, // Default starting quantity
+        threshold: 5,  // Default threshold
+        lastUpdated: new Date().toISOString().split("T")[0],
+        patientId: selectedPatientId
+      };
+      
+      setStock((prev) => [...prev, newItem]);
+    }
+    
+    setNewMedication({
+      name: "",
+      dosage: "",
+      frequency: "daily",
+      time: "08:00",
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: "",
+      description: ""
+    });
+    
+    setIsMedicationDialogOpen(false);
+    
+    toast({
+      title: "Medication Scheduled",
+      description: `New medication has been scheduled for ${patients.find(p => p.id === selectedPatientId)?.name}.`,
     });
   };
 
@@ -174,6 +273,8 @@ const AdminStock = () => {
     (selectedPatientId ? item.patientId === selectedPatientId : true) &&
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  
+  const selectedPatient = patients.find(p => p.id === selectedPatientId);
 
   return (
     <SidebarProvider defaultOpen={false}>
@@ -209,38 +310,143 @@ const AdminStock = () => {
                 </div>
               </div>
               
-              <div className="mb-6">
+              <div className="mb-6 flex flex-col sm:flex-row gap-4">
+                {/* Add Medication Button */}
+                <Dialog open={isMedicationDialogOpen} onOpenChange={setIsMedicationDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      className="flex items-center gap-2 w-full sm:w-auto"
+                      disabled={!selectedPatientId}
+                      variant="default"
+                    >
+                      <Clock className="h-4 w-4" />
+                      Add Scheduled Medication
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Schedule New Medication</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      {selectedPatient && (
+                        <div className="bg-primary/10 p-2 rounded-md">
+                          <p className="text-sm">Scheduling for: <strong>{selectedPatient.name}</strong></p>
+                        </div>
+                      )}
+                      
+                      <div className="grid gap-2">
+                        <Label htmlFor="med-name">Medicine Name</Label>
+                        <Input
+                          id="med-name"
+                          value={newMedication.name}
+                          onChange={(e) => setNewMedication(prev => ({ ...prev, name: e.target.value }))}
+                          placeholder="e.g., Aspirin"
+                        />
+                      </div>
+                      
+                      <div className="grid gap-2">
+                        <Label htmlFor="dosage">Dosage</Label>
+                        <Input
+                          id="dosage"
+                          value={newMedication.dosage}
+                          onChange={(e) => setNewMedication(prev => ({ ...prev, dosage: e.target.value }))}
+                          placeholder="e.g., 1 tablet"
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="frequency">Frequency</Label>
+                          <Select 
+                            value={newMedication.frequency} 
+                            onValueChange={(value) => setNewMedication(prev => ({ ...prev, frequency: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select frequency" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {frequencyOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="grid gap-2">
+                          <Label htmlFor="time">Time</Label>
+                          <Input
+                            id="time"
+                            type="time"
+                            value={newMedication.time}
+                            onChange={(e) => setNewMedication(prev => ({ ...prev, time: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="start-date">Start Date</Label>
+                          <Input
+                            id="start-date"
+                            type="date"
+                            value={newMedication.startDate}
+                            onChange={(e) => setNewMedication(prev => ({ ...prev, startDate: e.target.value }))}
+                          />
+                        </div>
+                        
+                        <div className="grid gap-2">
+                          <Label htmlFor="end-date">End Date (Optional)</Label>
+                          <Input
+                            id="end-date"
+                            type="date"
+                            value={newMedication.endDate}
+                            onChange={(e) => setNewMedication(prev => ({ ...prev, endDate: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid gap-2">
+                        <Label htmlFor="description">Description (Optional)</Label>
+                        <Input
+                          id="description"
+                          value={newMedication.description}
+                          onChange={(e) => setNewMedication(prev => ({ ...prev, description: e.target.value }))}
+                          placeholder="Special instructions..."
+                        />
+                      </div>
+                      
+                      <Button onClick={handleAddMedication} className="mt-2">
+                        Schedule Medication
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                
+                {/* Add to Inventory Button */}
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="flex items-center gap-2 w-full md:w-auto mb-6">
+                    <Button 
+                      className="flex items-center gap-2 w-full sm:w-auto" 
+                      disabled={!selectedPatientId}
+                      variant="outline"
+                    >
                       <Plus className="h-4 w-4" />
-                      Add Medicine
+                      Add to Inventory
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Add New Medicine</DialogTitle>
+                      <DialogTitle>Add to Inventory</DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="patient">Patient</Label>
-                        <Select 
-                          value={selectedPatientId} 
-                          onValueChange={setSelectedPatientId}
-                          disabled={!selectedPatientId}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a patient" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {patients.map((patient) => (
-                              <SelectItem key={patient.id} value={patient.id}>
-                                {patient.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      {selectedPatient && (
+                        <div className="bg-muted p-2 rounded-md">
+                          <p className="text-sm">Adding to inventory for: <strong>{selectedPatient.name}</strong></p>
+                        </div>
+                      )}
+                      
                       <div className="grid gap-2">
                         <Label htmlFor="name">Medicine Name</Label>
                         <Input
@@ -265,6 +471,15 @@ const AdminStock = () => {
                           type="number"
                           value={newMedicine.threshold}
                           onChange={(e) => setNewMedicine(prev => ({ ...prev, threshold: e.target.value }))}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="expiry">Expiry Date (Optional)</Label>
+                        <Input
+                          id="expiry"
+                          type="date"
+                          value={newMedicine.expiryDate}
+                          onChange={(e) => setNewMedicine(prev => ({ ...prev, expiryDate: e.target.value }))}
                         />
                       </div>
                       <Button onClick={handleAddMedicine} className="mt-2">
