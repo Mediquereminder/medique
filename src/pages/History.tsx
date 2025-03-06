@@ -21,7 +21,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface HistoryEntry {
@@ -30,6 +30,7 @@ interface HistoryEntry {
   medicine: string;
   quantity: string;
   patientId: string;
+  taken: boolean;
 }
 
 interface Patient {
@@ -53,6 +54,7 @@ const dummyHistory: HistoryEntry[] = [
     medicine: "Aspirin",
     quantity: "1",
     patientId: "p1",
+    taken: true,
   },
   {
     id: "2",
@@ -60,6 +62,7 @@ const dummyHistory: HistoryEntry[] = [
     medicine: "Vitamin C",
     quantity: "2",
     patientId: "p1",
+    taken: true,
   },
   {
     id: "3",
@@ -67,6 +70,7 @@ const dummyHistory: HistoryEntry[] = [
     medicine: "Paracetamol",
     quantity: "1",
     patientId: "p2",
+    taken: false,
   },
   {
     id: "4",
@@ -74,6 +78,7 @@ const dummyHistory: HistoryEntry[] = [
     medicine: "Ibuprofen",
     quantity: "1",
     patientId: "p1",
+    taken: true,
   },
   {
     id: "5",
@@ -81,6 +86,7 @@ const dummyHistory: HistoryEntry[] = [
     medicine: "Vitamin D",
     quantity: "1",
     patientId: "p1",
+    taken: false,
   },
 ];
 
@@ -255,14 +261,20 @@ const History = () => {
                                         <TableHeader>
                                           <TableRow>
                                             <TableHead>Medicine</TableHead>
-                                            <TableHead>Quantity Taken</TableHead>
+                                            <TableHead>Taken</TableHead>
                                           </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                           {group.entries.map(entry => (
                                             <TableRow key={entry.id}>
                                               <TableCell>{entry.medicine}</TableCell>
-                                              <TableCell>{entry.quantity}</TableCell>
+                                              <TableCell>
+                                                {entry.taken ? (
+                                                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                                                ) : (
+                                                  <XCircle className="h-5 w-5 text-red-600" />
+                                                )}
+                                              </TableCell>
                                             </TableRow>
                                           ))}
                                         </TableBody>

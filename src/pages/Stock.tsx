@@ -117,7 +117,8 @@ const Stock = () => {
           date: new Date().toISOString().split('T')[0],
           medicine: medicineUpdated.name,
           quantity: Math.abs(change).toString(),
-          patientId: medicineUpdated.patientId || userId
+          patientId: medicineUpdated.patientId || userId,
+          taken: true // Set taken to true when medication is taken
         };
         
         const savedHistory = localStorage.getItem("medicationHistory");
