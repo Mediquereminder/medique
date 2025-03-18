@@ -4,269 +4,341 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
+import { ArrowLeft, Mail, User, Lock, Shield } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff } from "lucide-react";
-import { nanoid } from "nanoid";
+import { v4 as uuidv4 } from "uuid";
+import LoadingOverlay from "@/components/LoadingOverlay";
 
 const SignUp = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    phone: "",
-    role: "patient"
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("patient");
+  const [patientCode, setPatientCode] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [generatedCode, setGeneratedCode] = useState("");
+  const [showConnectPatient, setShowConnectPatient] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+  const generateUniqueCode = () => {
+    // Generate a short unique code for patients
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    // Form validation
-    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive",
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      toast({
-        title: "Error",
-        description: "Password must be at least 6 characters",
-        variant: "destructive",
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Check if user already exists
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const userExists = users.some((user: any) => user.email === formData.email);
-
-    if (userExists) {
-      toast({
-        title: "Error",
-        description: "User with this email already exists",
-        variant: "destructive",
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Generate a unique user ID
-    const userId = nanoid(10);
-
-    // Create new user
-    const newUser = {
-      ...formData,
-      userId,
-      connectedPatients: [],
-      connectedCaretakers: [],
-      medications: [],
-      allergies: [],
-      conditions: [],
-      history: [],
-      notifications: []
-    };
-
-    // Add user to "database"
-    users.push(newUser);
-    localStorage.setItem("users", JSON.stringify(users));
+    setIsLoading(true);
     
-    // Set current user
-    localStorage.setItem("currentUser", JSON.stringify(newUser));
-
-    // Show success message
-    toast({
-      title: "Success",
-      description: "Account created! Redirecting to dashboard...",
-    });
-
-    // Redirect based on role
+    // Simulate network delay
     setTimeout(() => {
-      setIsSubmitting(false);
-      if (formData.role === "admin") {
-        navigate("/admin-dashboard");
-      } else {
-        navigate("/dashboard");
+      // Check if email already exists
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      const emailExists = users.some((user: any) => user.email === email);
+      
+      if (emailExists) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "This email is already registered.",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      // Generate unique user ID
+      const userId = uuidv4();
+      
+      // Generate unique code for patients to be used by caretakers
+      const uniqueCode = role === "patient" ? generateUniqueCode() : "";
+      
+      // Create new user
+      const newUser = {
+        userId,
+        name,
+        email,
+        password,
+        role,
+        uniqueCode,
+        notifications: [],
+        connectedPatients: [],
+        connectedCaretakers: []
+      };
+      
+      // Update users in localStorage
+      users.push(newUser);
+      localStorage.setItem("users", JSON.stringify(users));
+      
+      // Set current user
+      localStorage.setItem("currentUser", JSON.stringify(newUser));
+      
+      toast({
+        title: "Account created!",
+        description: "Your account has been successfully created.",
+      });
+      
+      if (role === "patient") {
+        // Show generated code to patient
+        setGeneratedCode(uniqueCode);
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 5000);
+      } else if (role === "admin") {
+        // Show option to connect patient
+        setShowConnectPatient(true);
+        setIsLoading(false);
       }
     }, 1500);
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/5 p-4">
-      <div className="w-full max-w-md">
-        <Link to="/" className="flex items-center gap-2 mb-6 text-primary hover:text-primary/80 transition-colors">
-          <img 
-            src="/lovable-uploads/a1995604-78a6-42f0-a09f-3066fbff9ff7.png" 
-            alt="Medique Logo" 
-            className="h-8 w-auto"
-          />
-          <span className="text-2xl font-semibold">Medique</span>
-        </Link>
+  const handleConnectPatient = () => {
+    if (!patientCode) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please enter a patient code.",
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    setTimeout(() => {
+      // Find patient with the given code
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      const patientIndex = users.findIndex((user: any) => 
+        user.role === "patient" && user.uniqueCode === patientCode
+      );
+      
+      if (patientIndex === -1) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Invalid patient code.",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      // Get current user
+      const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+      
+      // Connect caretaker to patient
+      if (!users[patientIndex].connectedCaretakers) {
+        users[patientIndex].connectedCaretakers = [];
+      }
+      users[patientIndex].connectedCaretakers.push(currentUser.userId);
+      
+      // Connect patient to caretaker
+      const caretakerIndex = users.findIndex((user: any) => user.userId === currentUser.userId);
+      if (caretakerIndex !== -1) {
+        if (!users[caretakerIndex].connectedPatients) {
+          users[caretakerIndex].connectedPatients = [];
+        }
+        users[caretakerIndex].connectedPatients.push(users[patientIndex].userId);
         
-        <Card className="w-full backdrop-blur-sm bg-white/80">
-          <CardHeader>
-            <CardTitle>Create an account</CardTitle>
-            <CardDescription>
-              Sign up for Medique to manage your healthcare needs
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
+        // Update current user
+        currentUser.connectedPatients = users[caretakerIndex].connectedPatients;
+        localStorage.setItem("currentUser", JSON.stringify(currentUser));
+      }
+      
+      // Update users in localStorage
+      localStorage.setItem("users", JSON.stringify(users));
+      
+      toast({
+        title: "Patient connected!",
+        description: `You are now connected to ${users[patientIndex].name}.`,
+      });
+      
+      navigate("/admin-dashboard");
+    }, 1500);
+  };
+
+  if (generatedCode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+        <div className="w-full max-w-md space-y-8 glass-panel p-8 rounded-lg text-center">
+          <h2 className="text-2xl font-bold text-foreground">Account Created!</h2>
+          <p className="mt-2 text-muted-foreground">
+            Your unique patient code is:
+          </p>
+          <div className="p-6 bg-primary/10 rounded-md border border-primary/20 my-6">
+            <span className="text-3xl font-mono font-bold tracking-widest text-primary">{generatedCode}</span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Share this code with your caretaker so they can connect to your account.
+            <br />Keep it safe and do not share it with anyone else.
+          </p>
+          <div className="mt-6">
+            <p className="text-sm">You will be redirected to your dashboard in a few seconds...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (showConnectPatient) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+        <LoadingOverlay visible={isLoading} message="Connecting to patient..." />
+        <div className="w-full max-w-md space-y-8 glass-panel p-8 rounded-lg">
+          <h2 className="text-2xl font-bold text-foreground text-center">Connect to a Patient</h2>
+          <p className="mt-2 text-muted-foreground text-center">
+            Enter the patient's unique code to connect to their account
+          </p>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="patient-code">Patient Code</Label>
+              <Input
+                id="patient-code"
+                placeholder="Enter 6-character code"
+                className="uppercase"
+                value={patientCode}
+                onChange={(e) => setPatientCode(e.target.value.toUpperCase())}
+                maxLength={6}
+              />
+            </div>
+            
+            <Button 
+              className="w-full" 
+              onClick={handleConnectPatient}
+              disabled={isLoading}
+            >
+              Connect to Patient
+            </Button>
+            
+            <div className="flex justify-center">
+              <Button 
+                variant="ghost" 
+                onClick={() => navigate("/admin-dashboard")}
+                disabled={isLoading}
+              >
+                Skip for now
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-muted/30">
+      <LoadingOverlay visible={isLoading} message="Creating your account..." />
+      
+      {/* Back Button */}
+      <Link
+        to="/"
+        className="fixed top-4 left-4 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back to Home
+      </Link>
+
+      {/* Signup Form */}
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-md space-y-8 glass-panel p-8 rounded-lg">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-foreground">Create Account</h2>
+            <p className="mt-2 text-muted-foreground">
+              Sign up to manage your medications
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                   <Input
                     id="name"
-                    name="name"
                     placeholder="John Doe"
-                    value={formData.name}
-                    onChange={handleInputChange}
+                    className="pl-10"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     required
+                    disabled={isLoading}
                   />
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                   <Input
                     id="email"
-                    name="email"
                     type="email"
-                    placeholder="you@example.com"
-                    value={formData.email}
-                    onChange={handleInputChange}
+                    placeholder="your@email.com"
+                    className="pl-10"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
+                    disabled={isLoading}
                   />
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone (optional)</Label>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                   <Input
-                    id="phone"
-                    name="phone"
-                    placeholder="+1 234 567 8900"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
+                    id="password"
                     type="password"
                     placeholder="••••••••"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
+                    className="pl-10"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={isLoading}
+                    minLength={6}
                   />
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="role">Account Type</Label>
-                  <select
-                    id="role"
-                    name="role"
-                    value={formData.role}
-                    onChange={handleSelectChange}
-                    className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="patient">Patient</option>
-                    <option value="admin">Caretaker/Doctor</option>
-                  </select>
-                </div>
-                
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Creating Account..." : "Sign Up"}
-                </Button>
               </div>
-            </form>
-          </CardContent>
-          <CardFooter className="flex justify-center">
-            <p className="text-sm text-muted-foreground">
+
+              <div className="space-y-2">
+                <Label htmlFor="role">Account Type</Label>
+                <div className="relative">
+                  <Shield className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground pointer-events-none" />
+                  <Select
+                    value={role}
+                    onValueChange={setRole}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger className="w-full pl-10">
+                      <SelectValue placeholder="Select account type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="patient">Patient</SelectItem>
+                      <SelectItem value="admin">Caretaker</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Creating account..." : "Create Account"}
+            </Button>
+
+            <p className="text-center text-sm text-muted-foreground">
               Already have an account?{" "}
               <Link to="/login" className="text-primary hover:underline">
                 Sign in
               </Link>
             </p>
-          </CardFooter>
-        </Card>
+          </form>
+        </div>
       </div>
     </div>
   );

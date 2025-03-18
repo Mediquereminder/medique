@@ -10,6 +10,9 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
+import { checkDueMedications, checkMissedMedications } from "@/utils/medicationService";
 
 interface StockNavbarProps {
   onLogout: () => void;
@@ -18,6 +21,7 @@ interface StockNavbarProps {
 export function StockNavbar({
   onLogout
 }: StockNavbarProps) {
+  const { toast: toastHook } = useToast();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -27,7 +31,7 @@ export function StockNavbar({
     
     // Get all users to find notifications
     const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const userIndex = users.findIndex((user: any) => user.email === currentUser.email);
+    const userIndex = users.findIndex((user: any) => user.userId === currentUser.userId);
     
     if (userIndex !== -1) {
       const userNotifications = users[userIndex].notifications || [];
@@ -35,15 +39,41 @@ export function StockNavbar({
       setUnreadCount(userNotifications.filter((notification: any) => !notification.read).length);
     }
 
-    // Set up interval to check for new notifications
+    // Check for due and missed medications
+    if (currentUser.userId) {
+      checkDueMedications();
+      checkMissedMedications();
+    }
+
+    // Set up interval to check for new notifications and medications
     const interval = setInterval(() => {
       const updatedUsers = JSON.parse(localStorage.getItem("users") || "[]");
-      const updatedUserIndex = updatedUsers.findIndex((user: any) => user.email === currentUser.email);
+      const updatedUserIndex = updatedUsers.findIndex((user: any) => user.userId === currentUser.userId);
       
       if (updatedUserIndex !== -1) {
         const updatedNotifications = updatedUsers[updatedUserIndex].notifications || [];
+        
+        // Check if there are new notifications
+        if (updatedNotifications.length > notifications.length) {
+          const newNotifs = updatedNotifications.slice(0, updatedNotifications.length - notifications.length);
+          
+          // Show a toast for new notifications
+          if (newNotifs.length > 0) {
+            toast({
+              title: newNotifs[0].title,
+              description: newNotifs[0].message,
+            });
+          }
+        }
+        
         setNotifications(updatedNotifications);
         setUnreadCount(updatedNotifications.filter((notification: any) => !notification.read).length);
+      }
+      
+      // Check for due and missed medications
+      if (currentUser.userId) {
+        checkDueMedications();
+        checkMissedMedications();
       }
     }, 30000); // Check every 30 seconds
 
@@ -53,7 +83,7 @@ export function StockNavbar({
   const markAllAsRead = () => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
     const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const userIndex = users.findIndex((user: any) => user.email === currentUser.email);
+    const userIndex = users.findIndex((user: any) => user.userId === currentUser.userId);
     
     if (userIndex !== -1) {
       // Mark all notifications as read
@@ -69,6 +99,11 @@ export function StockNavbar({
       // Update state
       setNotifications(users[userIndex].notifications);
       setUnreadCount(0);
+      
+      toastHook({
+        title: "Notifications cleared",
+        description: "All notifications have been marked as read."
+      });
     }
   };
 

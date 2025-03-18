@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Calendar, Clock, Plus, Trash2, AlertTriangle, Eye, Pill, Package, Shield } from "lucide-react";
@@ -205,7 +204,7 @@ const AdminStock = () => {
       return;
     }
     
-    // Add medication to the schedule
+    // Add medication to the schedule with the 'active' property
     const medication = {
       name: newMedication.name,
       dosage: newMedication.dosage,
@@ -215,7 +214,8 @@ const AdminStock = () => {
       endDate: newMedication.endDate || undefined,
       description: newMedication.description || undefined,
       patientId: selectedPatientId,
-      createdBy: currentUser.userId
+      createdBy: currentUser.userId,
+      active: true // Add the missing 'active' property
     };
     
     addMedication(medication);

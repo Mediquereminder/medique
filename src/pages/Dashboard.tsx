@@ -1,8 +1,7 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, Menu, Clock, CheckCircle, Timer, ArrowLeft, ArrowRight, Bell } from "lucide-react";
+import { LogOut, Menu, Clock, CheckCircle2, Timer, ArrowLeft, ArrowRight, Bell } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Card } from "@/components/ui/card";
@@ -34,7 +33,7 @@ const Dashboard = () => {
   const { toast } = useToast();
   const [randomFact, setRandomFact] = useState("");
   const [userId, setUserId] = useState("");
-  const [userRole, setUserRole] = useState("patient");
+  const [userRole, setUserRole] = useState<"admin" | "patient">("patient");
   const [timelinePosition, setTimelinePosition] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [clickedMedId, setClickedMedId] = useState(null);
@@ -353,7 +352,7 @@ const Dashboard = () => {
                           >
                             <div className="flex flex-col items-center gap-4 relative z-10">
                               {med.status === "taken" && 
-                                <CheckCircle className="w-12 h-12 text-green-500 animate-fadeIn" />
+                                <CheckCircle2 className="w-12 h-12 text-green-500 animate-fadeIn" />
                               }
                               {med.status === "current" && 
                                 <div className="relative">
@@ -388,7 +387,7 @@ const Dashboard = () => {
                                 >
                                   <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-green-400 to-green-500 transition-transform duration-300 transform translate-y-full group-hover:translate-y-0"></span>
                                   <span className="relative flex items-center justify-center gap-2 transition-all duration-300 group-hover:text-white">
-                                    <CheckCircle className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
+                                    <CheckCircle2 className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
                                     Mark as Taken
                                   </span>
                                 </Button>
