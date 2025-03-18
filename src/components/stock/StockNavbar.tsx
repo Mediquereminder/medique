@@ -78,7 +78,7 @@ export function StockNavbar({
     }, 30000); // Check every 30 seconds
 
     return () => clearInterval(interval);
-  }, []);
+  }, [notifications.length]);
 
   const markAllAsRead = () => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
