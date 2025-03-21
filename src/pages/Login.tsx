@@ -34,8 +34,8 @@ const Login = () => {
           description: "Login successful.",
         });
 
-        // Redirect based on role
-        navigate(user.role === "admin" ? "/admin-dashboard" : "/dashboard");
+        // Redirect to dashboard
+        navigate("/dashboard");
       } else {
         toast({
           variant: "destructive",
