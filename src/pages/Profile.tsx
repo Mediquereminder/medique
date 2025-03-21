@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { StockNavbar } from "@/components/stock/StockNavbar";
 import { useToast } from "@/hooks/use-toast";
 import { UserRound, Copy, CheckCircle2, UserPlus, Users } from "lucide-react";
+import { v4 as uuidv4 } from 'uuid';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -33,7 +34,27 @@ const Profile = () => {
     setName(currentUser.name || "");
     setEmail(currentUser.email || "");
     setRole(currentUser.role || "patient");
-    setUniqueCode(currentUser.uniqueCode || "");
+
+    // Generate unique code for patients if it doesn't exist
+    if (currentUser.role === "patient" && !currentUser.uniqueCode) {
+      const newUniqueCode = uuidv4().substring(0, 8);
+      
+      // Update current user
+      currentUser.uniqueCode = newUniqueCode;
+      localStorage.setItem("currentUser", JSON.stringify(currentUser));
+      
+      // Update in users array
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      const userIndex = users.findIndex((u: any) => u.userId === currentUser.userId);
+      if (userIndex !== -1) {
+        users[userIndex].uniqueCode = newUniqueCode;
+        localStorage.setItem("users", JSON.stringify(users));
+      }
+      
+      setUniqueCode(newUniqueCode);
+    } else {
+      setUniqueCode(currentUser.uniqueCode || "");
+    }
 
     // Load connected users
     const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
