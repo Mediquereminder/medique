@@ -17,6 +17,9 @@ import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "./components/ThemeProvider";
 import LoadingOverlay from "./components/LoadingOverlay";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminPatients from "./pages/AdminPatients";
+import AdminStock from "./pages/AdminStock";
 
 // Create auth context
 interface AuthContextType {
@@ -64,10 +67,20 @@ const App = () => {
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                
+                {/* Patient Routes */}
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/dashboard/history" element={<History />} />
                 <Route path="/dashboard/profile" element={<Profile />} />
                 <Route path="/dashboard/stock" element={<Stock />} />
+                
+                {/* Admin/Caretaker Routes */}
+                <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                <Route path="/admin-dashboard/patients" element={<AdminPatients />} />
+                <Route path="/admin-dashboard/stock" element={<AdminStock />} />
+                <Route path="/admin-dashboard/history" element={<History />} />
+                <Route path="/admin-dashboard/profile" element={<Profile />} />
+                
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
