@@ -16,8 +16,8 @@ const SignUp = () => {
   const { toast } = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [password, setPassword] = useState("123");
+  const [confirmPassword, setConfirmPassword] = useState("123");
   const [role, setRole] = useState("patient");
   const [patientCode, setPatientCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -30,12 +30,12 @@ const SignUp = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Form validation
-    if (!name || !email || !password) {
+    // Form validation - only check if fields are filled and passwords match
+    if (!name || !email) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "All fields are required.",
+        description: "Name and email are required.",
       });
       return;
     }
