@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useState, createContext, useContext } from "react";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -20,6 +20,7 @@ import LoadingOverlay from "./components/LoadingOverlay";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminPatients from "./pages/AdminPatients";
 import AdminStock from "./pages/AdminStock";
+import AdminAlerts from "./pages/AdminAlerts";
 
 // Create auth context
 interface AuthContextType {
@@ -80,7 +81,9 @@ const App = () => {
                 <Route path="/admin-dashboard/stock" element={<AdminStock />} />
                 <Route path="/admin-dashboard/history" element={<History />} />
                 <Route path="/admin-dashboard/profile" element={<Profile />} />
+                <Route path="/admin-dashboard/alerts" element={<AdminAlerts />} />
                 
+                {/* Redirect to 404 page */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
