@@ -227,7 +227,7 @@ const SplitAgeSelect = React.forwardRef<
         </SelectTrigger>
         <SelectContent>
           {daysOptions.map((day) => (
-            <SelectItem key={`day-${day}`} value={day.toString()}>
+            <SelectItem key={`day-${day}`} value={day.toString() || "0"}>
               {day}
             </SelectItem>
           ))}
@@ -246,7 +246,7 @@ const SplitAgeSelect = React.forwardRef<
         </SelectTrigger>
         <SelectContent>
           {monthsOptions.map((month) => (
-            <SelectItem key={`month-${month}`} value={month.toString()}>
+            <SelectItem key={`month-${month}`} value={month.toString() || "0"}>
               {month}
             </SelectItem>
           ))}
@@ -265,7 +265,7 @@ const SplitAgeSelect = React.forwardRef<
         </SelectTrigger>
         <SelectContent>
           {yearsOptions.map((year) => (
-            <SelectItem key={`year-${year}`} value={year.toString()}>
+            <SelectItem key={`year-${year}`} value={year.toString() || "0"}>
               {year}
             </SelectItem>
           ))}

@@ -67,7 +67,7 @@ function Calendar({
           
           return (
             <Select
-              value={value?.toString()}
+              value={value?.toString() || ""}
               onValueChange={handleValueChange}
             >
               <SelectTrigger className="h-7 min-w-[80px] px-2 py-1 text-xs border border-input">
@@ -77,7 +77,7 @@ function Calendar({
                 {options.map((option, id) => (
                   <SelectItem
                     key={id}
-                    value={option.props.value?.toString()}
+                    value={option.props.value?.toString() || `option-${id}`}
                   >
                     {option.props.children}
                   </SelectItem>
