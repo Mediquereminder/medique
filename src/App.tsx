@@ -9,7 +9,6 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
-import History from "./pages/History";
 import Profile from "./pages/Profile";
 import Stock from "./pages/Stock";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -71,7 +70,6 @@ const App = () => {
                 
                 {/* Patient Routes */}
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/dashboard/history" element={<History />} />
                 <Route path="/dashboard/profile" element={<Profile />} />
                 <Route path="/dashboard/stock" element={<Stock />} />
                 
@@ -79,7 +77,6 @@ const App = () => {
                 <Route path="/admin-dashboard" element={<AdminDashboard />} />
                 <Route path="/admin-dashboard/patients" element={<AdminPatients />} />
                 <Route path="/admin-dashboard/stock" element={<AdminStock />} />
-                <Route path="/admin-dashboard/history" element={<History />} />
                 <Route path="/admin-dashboard/profile" element={<Profile />} />
                 <Route path="/admin-dashboard/alerts" element={<AdminAlerts />} />
                 

@@ -9,7 +9,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Home, Package, UserCircle, History, Users } from "lucide-react";
+import { Home, Package, UserCircle, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 
@@ -68,19 +68,6 @@ export function AppSidebar({ role }: AppSidebarProps) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
-
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start hover:text-primary hover:bg-primary/10"
-                    onClick={() => navigate(`${basePath}/history`)}
-                  >
-                    <History className="h-4 w-4" />
-                    <span>History</span>
-                  </Button>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
 
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
