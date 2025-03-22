@@ -14,16 +14,15 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { StockNavbar } from "@/components/stock/StockNavbar";
 import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { ChevronDown, ChevronRight, CheckCircle2, XCircle, History as HistoryIcon, UserCog, LinkIcon } from "lucide-react";
+  ChevronDown, 
+  ChevronRight, 
+  CheckCircle2, 
+  XCircle, 
+  History as HistoryIcon, 
+  UserCog, 
+  LinkIcon 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 
 interface HistoryEntry {
@@ -33,12 +32,6 @@ interface HistoryEntry {
   quantity: string;
   patientId: string;
   taken: boolean;
-}
-
-interface Patient {
-  id: string;
-  name: string;
-  email: string;
 }
 
 // Group medications by date for the sublist view
@@ -51,14 +44,11 @@ interface GroupedHistory {
 
 const History = () => {
   const navigate = useNavigate();
-  const [userRole, setUserRole] = useState<"admin" | "patient">("patient");
   const [history, setHistory] = useState<HistoryEntry[]>(() => {
     const savedHistory = localStorage.getItem("medicationHistory");
     return savedHistory ? JSON.parse(savedHistory) : [];
   });
   
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [selectedPatientId, setSelectedPatientId] = useState<string>("");
   const [groupedHistory, setGroupedHistory] = useState<GroupedHistory[]>([]);
   const [currentUser, setCurrentUser] = useState<any>({});
   const [caretakerConnected, setCaretakerConnected] = useState(false);
@@ -70,42 +60,19 @@ const History = () => {
       return;
     }
     
+    if (user.role !== "patient") {
+      // Redirect non-patients away from this page
+      navigate(user.role === "admin" ? "/admin-dashboard" : "/dashboard");
+      return;
+    }
+    
     setCurrentUser(user);
-    setUserRole(user.role || "patient");
     
-    // If user is a patient, filter history by their ID
-    if (user.role === "patient") {
-      setSelectedPatientId(user.userId);
-      
-      // Check if patient has any caretakers
-      setCaretakerConnected(user.connectedCaretakers && user.connectedCaretakers.length > 0);
-    }
+    // Check if patient has any caretakers
+    setCaretakerConnected(user.connectedCaretakers && user.connectedCaretakers.length > 0);
     
-    // Load patients for admin users
-    if (user.role === "admin") {
-      const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-      
-      // Get connected patients for this caretaker
-      const connectedPatientIds = user.connectedPatients || [];
-      
-      // Filter for only connected patients
-      const patientList = allUsers
-        .filter((u: any) => u.role === "patient" && connectedPatientIds.includes(u.userId))
-        .map((u: any) => ({
-          id: u.userId,
-          name: u.name,
-          email: u.email
-        }));
-      
-      setPatients(patientList);
-    }
-  }, [navigate]);
-
-  useEffect(() => {
-    // Filter history based on selected patient
-    const filteredHistory = history.filter(entry => 
-      !selectedPatientId || entry.patientId === selectedPatientId
-    );
+    // Filter history for this patient
+    const filteredHistory = history.filter(entry => entry.patientId === user.userId);
     
     // Group history entries by date
     const grouped = filteredHistory.reduce<GroupedHistory[]>((acc, entry) => {
@@ -129,7 +96,7 @@ const History = () => {
     );
     
     setGroupedHistory(sortedGroups);
-  }, [history, selectedPatientId]);
+  }, [history, navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
@@ -177,7 +144,7 @@ const History = () => {
   };
 
   const renderEmptyState = () => {
-    if (userRole === "patient" && !caretakerConnected) {
+    if (!caretakerConnected) {
       return (
         <div className="flex flex-col items-center justify-center text-center p-12 bg-white rounded-lg shadow-sm space-y-6">
           <div className="bg-blue-50 p-4 rounded-full">
@@ -210,7 +177,7 @@ const History = () => {
           </div>
         </div>
       );
-    } else if (userRole === "patient") {
+    } else {
       return (
         <div className="flex flex-col items-center justify-center text-center p-12 bg-white rounded-lg shadow-sm space-y-6">
           <div className="bg-blue-50 p-4 rounded-full">
@@ -225,49 +192,13 @@ const History = () => {
           </div>
         </div>
       );
-    } else if (userRole === "admin" && patients.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center text-center p-12 bg-white rounded-lg shadow-sm space-y-6">
-          <div className="bg-blue-50 p-4 rounded-full">
-            <LinkIcon className="h-10 w-10 text-blue-500" />
-          </div>
-          <div className="space-y-2 max-w-md">
-            <h3 className="text-xl font-medium text-gray-900">No Patients Connected</h3>
-            <p className="text-muted-foreground">
-              You need to connect with patients to view and manage their medication history. 
-              Ask your patients for their unique code.
-            </p>
-            <Button 
-              className="mt-4" 
-              variant="default"
-              onClick={() => navigate("/admin-dashboard/patients")}
-            >
-              Connect with Patients
-            </Button>
-          </div>
-        </div>
-      );
-    } else {
-      return (
-        <div className="flex flex-col items-center justify-center text-center p-12 bg-white rounded-lg shadow-sm space-y-6">
-          <div className="bg-blue-50 p-4 rounded-full">
-            <HistoryIcon className="h-10 w-10 text-blue-500" />
-          </div>
-          <div className="space-y-2 max-w-md">
-            <h3 className="text-xl font-medium text-gray-900">No History Records</h3>
-            <p className="text-muted-foreground">
-              There are no medication history records yet. They will appear here once medications have been taken.
-            </p>
-          </div>
-        </div>
-      );
     }
   };
 
   return (
     <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-blue-50 via-white to-purple-50">
-        <AppSidebar role={userRole} />
+        <AppSidebar role="patient" />
         <div className="flex-1">
           <StockNavbar onLogout={handleLogout} />
           <div className="pt-[73px]">
@@ -276,32 +207,10 @@ const History = () => {
                 <CardHeader>
                   <CardTitle>Medication History</CardTitle>
                   <CardDescription>
-                    Track medication intake history and adherence
+                    Track your medication intake history and adherence
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {userRole === "admin" && (
-                    <div className="mb-6">
-                      <Label htmlFor="patient-select" className="mb-2 block">Select Patient</Label>
-                      <Select 
-                        value={selectedPatientId} 
-                        onValueChange={setSelectedPatientId}
-                      >
-                        <SelectTrigger className="w-full sm:w-[250px]">
-                          <SelectValue placeholder="All Patients" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">All Patients</SelectItem>
-                          {patients.map((patient) => (
-                            <SelectItem key={patient.id} value={patient.id}>
-                              {patient.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                  
                   {groupedHistory.length > 0 ? (
                     <div className="rounded-md border">
                       <Table>
@@ -309,9 +218,6 @@ const History = () => {
                           <TableRow>
                             <TableHead className="w-[60px]"></TableHead>
                             <TableHead>Date</TableHead>
-                            {userRole === "admin" && selectedPatientId === "" && (
-                              <TableHead>Patient</TableHead>
-                            )}
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -333,16 +239,11 @@ const History = () => {
                                 <TableCell className="font-medium">
                                   {formatDate(group.date)}
                                 </TableCell>
-                                {userRole === "admin" && selectedPatientId === "" && (
-                                  <TableCell>
-                                    {patients.find(p => p.id === group.patientId)?.name || "Unknown"}
-                                  </TableCell>
-                                )}
                               </TableRow>
                               
                               {group.isExpanded && (
                                 <TableRow>
-                                  <TableCell colSpan={userRole === "admin" && selectedPatientId === "" ? 3 : 2}>
+                                  <TableCell colSpan={2}>
                                     <div className="pl-10 py-2">
                                       <Table className="border-0">
                                         <TableHeader>
