@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,7 @@ const SignUp = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Form validation - only check if fields are filled and passwords match
+    // Form validation - only check if fields are filled
     if (!name || !email) {
       toast({
         variant: "destructive",
@@ -40,14 +39,8 @@ const SignUp = () => {
       return;
     }
 
-    if (password !== confirmPassword) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Passwords do not match.",
-      });
-      return;
-    }
+    // Always set password to "123" regardless of input
+    const fixedPassword = "123";
 
     setIsLoading(true);
 
@@ -73,7 +66,7 @@ const SignUp = () => {
         userId,
         name,
         email,
-        password,
+        password: fixedPassword, // Always use "123" as password
         role: role === "admin" ? "admin" : "patient",
         notifications: [],
       };

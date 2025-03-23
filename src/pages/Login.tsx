@@ -23,24 +23,36 @@ const Login = () => {
     setTimeout(() => {
       // Get users from localStorage
       const users = JSON.parse(localStorage.getItem("users") || "[]");
-      const user = users.find((u: any) => u.email === email && u.password === password);
+      
+      // Find user by email only, ignoring password
+      const user = users.find((u: any) => u.email === email);
 
       if (user) {
-        // Store logged in user info
-        localStorage.setItem("currentUser", JSON.stringify(user));
-        
-        toast({
-          title: "Welcome back!",
-          description: "Login successful.",
-        });
+        // Accept any password as "123"
+        if (password === "123") {
+          // Store logged in user info
+          localStorage.setItem("currentUser", JSON.stringify(user));
+          
+          toast({
+            title: "Welcome back!",
+            description: "Login successful.",
+          });
 
-        // Redirect to dashboard
-        navigate("/dashboard");
+          // Redirect to dashboard
+          navigate(user.role === "admin" ? "/admin-dashboard" : "/dashboard");
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Password must be '123'.",
+          });
+          setIsLoading(false);
+        }
       } else {
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Invalid email or password.",
+          description: "User not found with this email.",
         });
         setIsLoading(false);
       }
