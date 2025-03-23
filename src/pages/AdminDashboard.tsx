@@ -27,14 +27,16 @@ const AdminDashboard = () => {
     
     setCurrentUser(user);
     
-    // Count connected patients
+    // Count connected patients - ensure the array exists and has unique values
     const connectedPatients = user.connectedPatients || [];
-    setPatientCount(connectedPatients.length);
+    // Use Set to ensure unique patient IDs only
+    const uniquePatients = [...new Set(connectedPatients)];
+    setPatientCount(uniquePatients.length);
     
     // Count medicines in stock for this caretaker's patients
     const allStock = JSON.parse(localStorage.getItem("medicationStock") || "[]");
     const relevantStock = allStock.filter((item: any) => 
-      connectedPatients.includes(item.patientId)
+      uniquePatients.includes(item.patientId)
     );
     setMedicineCount(relevantStock.length);
     

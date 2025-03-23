@@ -10,7 +10,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Home, Package, UserCircle, Users, History } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 
 interface AppSidebarProps {
@@ -19,7 +19,17 @@ interface AppSidebarProps {
 
 export function AppSidebar({ role }: AppSidebarProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const basePath = role === "admin" ? "/admin-dashboard" : "/dashboard";
+
+  // Force the correct home path based on role
+  const goHome = () => {
+    if (role === "admin") {
+      navigate("/admin-dashboard");
+    } else {
+      navigate("/dashboard");
+    }
+  };
 
   return (
     <Sidebar className="top-[73px] border-t">
@@ -33,7 +43,7 @@ export function AppSidebar({ role }: AppSidebarProps) {
                   <Button 
                     variant="ghost" 
                     className="w-full justify-start hover:text-primary hover:bg-primary/10" 
-                    onClick={() => navigate(basePath)}
+                    onClick={goHome}
                   >
                     <Home className="h-4 w-4" />
                     <span>Home</span>

@@ -61,8 +61,8 @@ const AdminPatients = () => {
   const loadPatients = (user: any) => {
     const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
     
-    // Get connected patients for this caretaker
-    const connectedPatientIds = user.connectedPatients || [];
+    // Get connected patients for this caretaker - ensure array exists and filter out duplicates
+    const connectedPatientIds = [...new Set(user.connectedPatients || [])];
     
     // Filter for only connected patients
     const patientList = allUsers
@@ -126,13 +126,14 @@ const AdminPatients = () => {
         return;
       }
       
-      // Update caretaker's connected patients
+      // Update caretaker's connected patients - ensure it's an array and add unique value
       const caretakerIndex = users.findIndex((u: any) => u.userId === currentUser.userId);
       if (caretakerIndex !== -1) {
-        users[caretakerIndex].connectedPatients = [
-          ...(users[caretakerIndex].connectedPatients || []),
-          patient.userId
-        ];
+        const currentConnections = users[caretakerIndex].connectedPatients || [];
+        // Only add if not already connected
+        if (!currentConnections.includes(patient.userId)) {
+          users[caretakerIndex].connectedPatients = [...currentConnections, patient.userId];
+        }
         
         // Update the current user state
         setCurrentUser(users[caretakerIndex]);
@@ -147,11 +148,11 @@ const AdminPatients = () => {
         });
       }
       
-      // Update patient's connected caretakers
-      users[patientIndex].connectedCaretakers = [
-        ...(users[patientIndex].connectedCaretakers || []),
-        currentUser.userId
-      ];
+      // Update patient's connected caretakers - ensure it's an array and add unique value
+      const currentPatientCaretakers = users[patientIndex].connectedCaretakers || [];
+      if (!currentPatientCaretakers.includes(currentUser.userId)) {
+        users[patientIndex].connectedCaretakers = [...currentPatientCaretakers, currentUser.userId];
+      }
       
       // Add notification for patient
       addNotification(patient.userId, {
