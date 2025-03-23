@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -101,8 +102,7 @@ const AdminStock = () => {
     
     // Filter for only connected patients
     const patientList = allUsers
-      .filter((u: any) => u.role === "patient" && 
-        (connectedPatientIds.includes(u.userId) || user.role === "admin"))
+      .filter((u: any) => u.role === "patient" && connectedPatientIds.includes(u.userId))
       .map((u: any) => ({
         id: u.userId,
         name: u.name,
@@ -111,6 +111,12 @@ const AdminStock = () => {
       }));
     
     setPatients(patientList);
+    
+    // Check if there's a selected patient in localStorage
+    const selectedId = localStorage.getItem("selectedPatientId");
+    if (selectedId && patientList.some(p => p.id === selectedId)) {
+      setSelectedPatientId(selectedId);
+    }
   };
 
   useEffect(() => {
@@ -267,6 +273,7 @@ const AdminStock = () => {
 
   const handlePatientChange = (patientId: string) => {
     setSelectedPatientId(patientId);
+    localStorage.setItem("selectedPatientId", patientId);
   };
 
   const filteredStock = stock.filter((item) => 
@@ -293,11 +300,17 @@ const AdminStock = () => {
                       <SelectValue placeholder="Select a patient" />
                     </SelectTrigger>
                     <SelectContent>
-                      {patients.map((patient) => (
-                        <SelectItem key={patient.id} value={patient.id}>
-                          {patient.name}
+                      {patients.length > 0 ? (
+                        patients.map((patient) => (
+                          <SelectItem key={patient.id} value={patient.id}>
+                            {patient.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-patients" disabled>
+                          No connected patients
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -326,6 +339,9 @@ const AdminStock = () => {
                   <DialogContent className="max-w-md">
                     <DialogHeader>
                       <DialogTitle>Schedule New Medication</DialogTitle>
+                      <DialogDescription>
+                        Fill in the details to add a new medication schedule.
+                      </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       {selectedPatient && (
@@ -439,6 +455,9 @@ const AdminStock = () => {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Add to Inventory</DialogTitle>
+                      <DialogDescription>
+                        Enter medication details to add to patient's inventory.
+                      </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       {selectedPatient && (

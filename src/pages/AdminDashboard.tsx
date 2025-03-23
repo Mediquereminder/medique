@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Package, Users, AlertTriangle, LogOut, Menu } from "lucide-react";
@@ -9,15 +9,40 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState<any>({});
+  const [patientCount, setPatientCount] = useState(0);
+  const [medicineCount, setMedicineCount] = useState(0);
+  const [alertCount, setAlertCount] = useState(0);
   
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
     if (!user.email) {
       navigate("/login");
+      return;
     }
     if (user.role === "patient") {
       navigate("/dashboard");
+      return;
     }
+    
+    setCurrentUser(user);
+    
+    // Count connected patients
+    const connectedPatients = user.connectedPatients || [];
+    setPatientCount(connectedPatients.length);
+    
+    // Count medicines in stock for this caretaker's patients
+    const allStock = JSON.parse(localStorage.getItem("medicationStock") || "[]");
+    const relevantStock = allStock.filter((item: any) => 
+      connectedPatients.includes(item.patientId)
+    );
+    setMedicineCount(relevantStock.length);
+    
+    // Count low stock alerts
+    const lowStockItems = relevantStock.filter((item: any) => 
+      item.quantity <= item.threshold
+    );
+    setAlertCount(lowStockItems.length);
   }, [navigate]);
 
   const handleLogout = () => {
@@ -69,7 +94,7 @@ const AdminDashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="text-4xl font-bold text-primary">0</div>
+                      <div className="text-4xl font-bold text-primary">{medicineCount}</div>
                       <p className="text-muted-foreground">Total medicines in stock</p>
                     </div>
                   </CardContent>
@@ -85,7 +110,7 @@ const AdminDashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="text-4xl font-bold text-primary">0</div>
+                      <div className="text-4xl font-bold text-primary">{patientCount}</div>
                       <p className="text-muted-foreground">Registered patients</p>
                     </div>
                   </CardContent>
@@ -101,7 +126,7 @@ const AdminDashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="text-4xl font-bold text-primary">0</div>
+                      <div className="text-4xl font-bold text-primary">{alertCount}</div>
                       <p className="text-muted-foreground">Items below threshold</p>
                     </div>
                   </CardContent>
