@@ -4,8 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, Bell, CheckCircle2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { AlertTriangle, Bell } from "lucide-react";
 import { StockNavbar } from "@/components/stock/StockNavbar";
 
 interface MedicationStock {
@@ -20,7 +19,6 @@ interface MedicationStock {
 
 const Stock = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [stock, setStock] = useState<MedicationStock[]>([]);
   const [currentUser, setCurrentUser] = useState<any>({});
 
@@ -43,58 +41,6 @@ const Stock = () => {
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
     navigate("/login");
-  };
-
-  const handleTakeMedicine = (id: string) => {
-    setStock((prevStock) =>
-      prevStock.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              quantity: Math.max(0, item.quantity - 1),
-              lastUpdated: new Date().toISOString().split("T")[0],
-            }
-          : item
-      )
-    );
-
-    // Update the global stock as well
-    const savedStock = localStorage.getItem("medicationStock");
-    const allStock = savedStock ? JSON.parse(savedStock) : [];
-    const updatedAllStock = allStock.map((item: MedicationStock) => 
-      item.id === id
-        ? {
-            ...item,
-            quantity: Math.max(0, item.quantity - 1),
-            lastUpdated: new Date().toISOString().split("T")[0],
-          }
-        : item
-    );
-    localStorage.setItem("medicationStock", JSON.stringify(updatedAllStock));
-
-    const medicineTaken = stock.find(m => m.id === id);
-    if (medicineTaken) {
-      // Add to history
-      const historyEntry = {
-        id: Date.now().toString(),
-        date: new Date().toISOString().split('T')[0],
-        time: new Date().toLocaleTimeString(),
-        medicine: medicineTaken.name,
-        quantity: "1",
-        patientId: currentUser.userId,
-        patientName: currentUser.name,
-        taken: true
-      };
-      
-      const savedHistory = localStorage.getItem("medicationHistory");
-      const history = savedHistory ? JSON.parse(savedHistory) : [];
-      localStorage.setItem("medicationHistory", JSON.stringify([...history, historyEntry]));
-      
-      toast({
-        title: "Medicine Taken",
-        description: `1 ${medicineTaken.name} pill has been taken.`,
-      });
-    }
   };
 
   return (
@@ -153,16 +99,6 @@ const Stock = () => {
                             <span className="text-muted-foreground">Last Updated</span>
                             <span>{medicine.lastUpdated}</span>
                           </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 gap-2">
-                          <button 
-                            className="w-full bg-primary text-white py-2 rounded-md hover:bg-primary/90 transition flex items-center justify-center"
-                            onClick={() => handleTakeMedicine(medicine.id)}
-                          >
-                            <CheckCircle2 className="mr-2 h-4 w-4" />
-                            Mark as Taken
-                          </button>
                         </div>
                       </CardContent>
                     </Card>

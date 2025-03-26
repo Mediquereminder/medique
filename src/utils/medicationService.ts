@@ -336,12 +336,12 @@ export const checkDueMedications = () => {
   const medications = JSON.parse(localStorage.getItem("medications") || "[]");
   const now = new Date();
   
-  // Find schedules that are due in the next 30 minutes but not yet taken
+  // Find schedules that are due in the next 5 minutes but not yet taken
   const dueSchedules = schedules.filter((schedule: MedicationSchedule) => {
     const scheduledTime = new Date(schedule.scheduledTime);
     const timeDiff = (scheduledTime.getTime() - now.getTime()) / (1000 * 60); // Difference in minutes
     
-    return !schedule.taken && !schedule.skipped && timeDiff >= 0 && timeDiff <= 30;
+    return !schedule.taken && !schedule.skipped && timeDiff >= 0 && timeDiff <= 5;
   });
   
   // Create notifications for each due schedule

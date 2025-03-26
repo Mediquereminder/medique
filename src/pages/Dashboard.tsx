@@ -16,7 +16,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO } from "date-fns";
 
-// Sample medical facts
 const medicalFacts = [
   "Taking medications at the same time each day helps build a routine and improves adherence.",
   "Drinking enough water with medications helps them dissolve properly in your system.",
@@ -55,11 +54,9 @@ const Dashboard = () => {
     
     setUserId(user.userId || "");
     
-    // Set a random medical fact
     const randomIndex = Math.floor(Math.random() * medicalFacts.length);
     setRandomFact(medicalFacts[randomIndex]);
     
-    // Initialize medication storage if it doesn't exist
     if (!localStorage.getItem("medications")) {
       localStorage.setItem("medications", JSON.stringify([]));
     }
@@ -72,12 +69,10 @@ const Dashboard = () => {
   useEffect(() => {
     if (!userId) return;
     
-    // Load upcoming medications
     const loadMedications = () => {
       const upcoming = getUpcomingSchedules(userId);
       const today = getTodaySchedules(userId);
       
-      // Fetch medication details for each schedule
       const medications = JSON.parse(localStorage.getItem("medications") || "[]");
       
       const enrichedUpcoming = upcoming.map((schedule: MedicationSchedule) => {
@@ -120,16 +115,14 @@ const Dashboard = () => {
     
     loadMedications();
     
-    // Check for due and missed medications
     checkDueMedications();
     checkMissedMedications();
     
-    // Set interval to refresh medications and check due/missed ones
     const interval = setInterval(() => {
       loadMedications();
       checkDueMedications();
       checkMissedMedications();
-    }, 60000); // Check every minute
+    }, 60000);
     
     return () => clearInterval(interval);
   }, [userId, toast]);
@@ -139,70 +132,136 @@ const Dashboard = () => {
     const scheduled = parseISO(scheduledTime);
     const diffMinutes = (scheduled.getTime() - now.getTime()) / (1000 * 60);
     
-    // Consider "due now" if within 1 hour before or after scheduled time
     return diffMinutes >= -60 && diffMinutes <= 60;
   };
 
   const handleMarkAsTaken = (id: string) => {
-    // Set the clicked medication ID for targeted animation
     setClickedMedId(id);
-    
-    // Set animating state to trigger the shift animation
     setAnimating(true);
     
-    // After a brief delay to allow animation to complete
     setTimeout(() => {
-      // Mark medication as taken in backend
       markMedicationTaken(id);
       
-      // Update UI
       setAllMedications(prev => 
         prev.map(med => 
           med.id === id ? { ...med, status: "taken", time: "Just now" } : med
         )
       );
       
-      // Move timeline position to the right
       setTimelinePosition(prev => prev + 1);
       
-      // Reset animation states
       setAnimating(false);
       setClickedMedId(null);
       
-      // Show toast
       toast({
         title: "Medication Taken",
         description: "Great job! Your medication has been marked as taken.",
       });
-    }, 600); // Slightly longer to match animation duration
+    }, 600);
   };
 
-  // Get medications for the timeline based on current position
+  const handleTakeMedicineFromStock = (medicationName: string) => {
+    const medicationStock = JSON.parse(localStorage.getItem("medicationStock") || "[]");
+    const medication = medicationStock.find((med: any) => 
+      med.name === medicationName && med.patientId === userId
+    );
+    
+    if (medication) {
+      const updatedStock = medicationStock.map((med: any) => 
+        med.id === medication.id
+          ? {
+              ...med,
+              quantity: Math.max(0, med.quantity - 1),
+              lastUpdated: new Date().toISOString().split("T")[0],
+            }
+          : med
+      );
+      
+      localStorage.setItem("medicationStock", JSON.stringify(updatedStock));
+      
+      const historyEntry = {
+        id: Date.now().toString(),
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toLocaleTimeString(),
+        medicine: medication.name,
+        quantity: "1",
+        patientId: userId,
+        patientName: currentUser.name,
+        taken: true
+      };
+      
+      const savedHistory = localStorage.getItem("medicationHistory");
+      const history = savedHistory ? JSON.parse(savedHistory) : [];
+      localStorage.setItem("medicationHistory", JSON.stringify([...history, historyEntry]));
+      
+      toast({
+        title: "Medicine Taken",
+        description: `1 ${medication.name} pill has been taken.`,
+      });
+      
+      const upcoming = getUpcomingSchedules(userId);
+      const today = getTodaySchedules(userId);
+      
+      const medications = JSON.parse(localStorage.getItem("medications") || "[]");
+      
+      const enrichedUpcoming = upcoming.map((schedule: MedicationSchedule) => {
+        const medication = medications.find((med: any) => med.id === schedule.medicationId);
+        
+        return {
+          id: schedule.id,
+          name: medication?.name || "Unknown medication",
+          time: format(parseISO(schedule.scheduledTime), "h:mm a"),
+          scheduledTime: schedule.scheduledTime,
+          dosage: medication?.dosage || "1 tablet",
+          status: isDueNow(schedule.scheduledTime) ? "current" : "upcoming",
+          patientId: schedule.patientId,
+        };
+      });
+      
+      const enrichedToday = today.map((schedule: MedicationSchedule) => {
+        const medication = medications.find((med: any) => med.id === schedule.medicationId);
+        
+        return {
+          id: schedule.id,
+          name: medication?.name || "Unknown medication",
+          time: format(parseISO(schedule.scheduledTime), "h:mm a"),
+          scheduledTime: schedule.scheduledTime,
+          dosage: medication?.dosage || "1 tablet",
+          status: schedule.taken ? "taken" : 
+                isDueNow(schedule.scheduledTime) ? "current" : "upcoming",
+          patientId: schedule.patientId,
+        };
+      });
+      
+      setUpcomingMedications(enrichedUpcoming);
+      setTodayMedications(enrichedToday);
+      setAllMedications([
+        ...enrichedToday.filter((med: any) => med.status === "taken"),
+        ...enrichedToday.filter((med: any) => med.status === "current"),
+        ...enrichedUpcoming
+      ]);
+    }
+  };
+
   const getTimelineMedications = () => {
     const takenMeds = allMedications.filter(med => med.status === "taken");
     const currentMed = allMedications.find(med => med.status === "current");
     const upcomingMeds = allMedications.filter(med => med.status === "upcoming");
     
-    // Determine which medications to display based on timeline position
     let displayMeds = [];
     
-    // Always try to show one taken, one current, and one upcoming medication
     if (timelinePosition < takenMeds.length) {
-      // Show a taken medication on the left
       displayMeds.push(takenMeds[takenMeds.length - 1 - timelinePosition]);
     }
     
-    // Show the current medication in the middle (if there is one)
     if (currentMed) {
       displayMeds.push(currentMed);
     }
     
-    // Show an upcoming medication on the right
     if (upcomingMeds.length > 0 && timelinePosition < upcomingMeds.length) {
       displayMeds.push(upcomingMeds[timelinePosition]);
     }
     
-    // If we don't have 3 medications to show, add more upcoming ones
     while (displayMeds.length < 3 && upcomingMeds.length > displayMeds.filter(med => med.status === "upcoming").length) {
       const nextIndex = displayMeds.filter(med => med.status === "upcoming").length;
       if (upcomingMeds[nextIndex]) {
@@ -212,7 +271,6 @@ const Dashboard = () => {
       }
     }
     
-    // If we still don't have 3 medications, add more taken ones
     while (displayMeds.length < 3 && takenMeds.length > displayMeds.filter(med => med.status === "taken").length) {
       const nextIndex = displayMeds.filter(med => med.status === "taken").length;
       if (takenMeds[nextIndex]) {
@@ -266,7 +324,6 @@ const Dashboard = () => {
               <div className="flex flex-col items-center">
                 <h2 className="text-2xl font-bold text-primary mb-8 animate-fadeIn">Medication Timeline</h2>
                 
-                {/* Empty State if no medications */}
                 {allMedications.length === 0 && (
                   <Card className="w-full max-w-lg p-6 text-center mb-8">
                     <div className="py-10 flex flex-col items-center gap-4">
@@ -286,7 +343,6 @@ const Dashboard = () => {
                 
                 {allMedications.length > 0 && (
                   <>
-                    {/* Timeline Navigation */}
                     <div className="flex justify-between items-center w-full max-w-3xl mb-6 animate-fadeIn" style={{ animationDelay: "200ms" }}>
                       <Button 
                         variant="outline" 
@@ -315,7 +371,6 @@ const Dashboard = () => {
                       </Button>
                     </div>
                     
-                    {/* Smooth Timeline Slider */}
                     <div className="w-full max-w-5xl mx-auto relative overflow-hidden py-12 rounded-xl" style={{ perspective: "1000px" }}>
                       <div 
                         className={`
@@ -400,7 +455,6 @@ const Dashboard = () => {
                   </>
                 )}
 
-                {/* Medical Fact Section */}
                 <div className="mt-12 text-center max-w-2xl animate-fadeIn" style={{ animationDelay: "400ms" }}>
                   <div className="bg-accent text-accent-foreground rounded-lg p-6 shadow-sm border border-accent/30 hover-lift">
                     <h3 className="text-lg font-semibold text-primary mb-2">💡 Did you know?</h3>
