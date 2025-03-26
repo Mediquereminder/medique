@@ -1,286 +1,227 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { LogOut, Menu, Clock, CheckCircle2, Timer, ArrowLeft, ArrowRight, Bell } from "lucide-react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Card } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Calendar, Clock, Plus } from "lucide-react";
 import { 
-  getUpcomingSchedules, 
-  getTodaySchedules, 
-  markMedicationTaken,
-  checkDueMedications,
-  checkMissedMedications,
-  MedicationSchedule
-} from "@/utils/medicationService";
-import { useToast } from "@/hooks/use-toast";
-import { format, parseISO } from "date-fns";
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { StockNavbar } from "@/components/stock/StockNavbar";
+import LoadingOverlay from "@/components/LoadingOverlay";
+import { toast } from "@/hooks/use-toast";
 
-const medicalFacts = [
-  "Taking medications at the same time each day helps build a routine and improves adherence.",
-  "Drinking enough water with medications helps them dissolve properly in your system.",
-  "Some medications are best taken with food to prevent stomach upset.",
-  "Regular exercise can help improve the effectiveness of many medications.",
-  "Always complete your prescribed course of antibiotics, even if you feel better.",
-  "Store your medications in a cool, dry place away from direct sunlight.",
-  "Never share your prescription medications with others, even if they have similar symptoms.",
-  "Keep a detailed record of any side effects to discuss with your healthcare provider.",
-];
+interface Medication {
+  id: string;
+  name: string;
+  nextDose: string;
+  schedule: string;
+  patientId: string;
+  dosesTaken: number;
+  dosesRemaining: number;
+  isTaken: boolean;
+  lastTaken?: string;
+}
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [randomFact, setRandomFact] = useState("");
-  const [userId, setUserId] = useState("");
-  const [userRole, setUserRole] = useState<"admin" | "patient">("patient");
-  const [timelinePosition, setTimelinePosition] = useState(0);
-  const [animating, setAnimating] = useState(false);
-  const [clickedMedId, setClickedMedId] = useState(null);
-  const [upcomingMedications, setUpcomingMedications] = useState<any[]>([]);
-  const [todayMedications, setTodayMedications] = useState<any[]>([]);
-  const [allMedications, setAllMedications] = useState<any[]>([]);
+  const [medications, setMedications] = useState<Medication[]>([]);
+  const [newMedicationTime, setNewMedicationTime] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<any>({});
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
-    if (!user.email) {
+    const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
+    if (!storedUser.email) {
       navigate("/login");
+      return;
     }
     
-    if (user.role === "admin") {
-      setUserRole("admin");
-    } else {
-      setUserRole("patient");
-    }
-    
-    setUserId(user.userId || "");
-    
-    const randomIndex = Math.floor(Math.random() * medicalFacts.length);
-    setRandomFact(medicalFacts[randomIndex]);
-    
-    if (!localStorage.getItem("medications")) {
-      localStorage.setItem("medications", JSON.stringify([]));
-    }
-    
-    if (!localStorage.getItem("medicationSchedules")) {
-      localStorage.setItem("medicationSchedules", JSON.stringify([]));
-    }
-  }, [navigate]);
+    setUser(storedUser);
 
-  useEffect(() => {
-    if (!userId) return;
-    
-    const loadMedications = () => {
-      const upcoming = getUpcomingSchedules(userId);
-      const today = getTodaySchedules(userId);
-      
-      const medications = JSON.parse(localStorage.getItem("medications") || "[]");
-      
-      const enrichedUpcoming = upcoming.map((schedule: MedicationSchedule) => {
-        const medication = medications.find((med: any) => med.id === schedule.medicationId);
-        
-        return {
-          id: schedule.id,
-          name: medication?.name || "Unknown medication",
-          time: format(parseISO(schedule.scheduledTime), "h:mm a"),
-          scheduledTime: schedule.scheduledTime,
-          dosage: medication?.dosage || "1 tablet",
-          status: isDueNow(schedule.scheduledTime) ? "current" : "upcoming",
-          patientId: schedule.patientId,
-        };
-      });
-      
-      const enrichedToday = today.map((schedule: MedicationSchedule) => {
-        const medication = medications.find((med: any) => med.id === schedule.medicationId);
-        
-        return {
-          id: schedule.id,
-          name: medication?.name || "Unknown medication",
-          time: format(parseISO(schedule.scheduledTime), "h:mm a"),
-          scheduledTime: schedule.scheduledTime,
-          dosage: medication?.dosage || "1 tablet",
-          status: schedule.taken ? "taken" : 
-                isDueNow(schedule.scheduledTime) ? "current" : "upcoming",
-          patientId: schedule.patientId,
-        };
-      });
-      
-      setUpcomingMedications(enrichedUpcoming);
-      setTodayMedications(enrichedToday);
-      setAllMedications([
-        ...enrichedToday.filter((med: any) => med.status === "taken"),
-        ...enrichedToday.filter((med: any) => med.status === "current"),
-        ...enrichedUpcoming
-      ]);
-    };
-    
-    loadMedications();
-    
-    checkDueMedications();
-    checkMissedMedications();
-    
-    const interval = setInterval(() => {
-      loadMedications();
-      checkDueMedications();
-      checkMissedMedications();
-    }, 60000);
-    
-    return () => clearInterval(interval);
-  }, [userId, toast]);
-
-  const isDueNow = (scheduledTime: string) => {
-    const now = new Date();
-    const scheduled = parseISO(scheduledTime);
-    const diffMinutes = (scheduled.getTime() - now.getTime()) / (1000 * 60);
-    
-    return diffMinutes >= -60 && diffMinutes <= 60;
-  };
-
-  const handleMarkAsTaken = (id: string) => {
-    setClickedMedId(id);
-    setAnimating(true);
-    
-    setTimeout(() => {
-      markMedicationTaken(id);
-      
-      setAllMedications(prev => 
-        prev.map(med => 
-          med.id === id ? { ...med, status: "taken", time: "Just now" } : med
-        )
-      );
-      
-      setTimelinePosition(prev => prev + 1);
-      
-      setAnimating(false);
-      setClickedMedId(null);
-      
-      toast({
-        title: "Medication Taken",
-        description: "Great job! Your medication has been marked as taken.",
-      });
-    }, 600);
-  };
-
-  const handleTakeMedicineFromStock = (medicationName: string) => {
-    const medicationStock = JSON.parse(localStorage.getItem("medicationStock") || "[]");
-    const medication = medicationStock.find((med: any) => 
-      med.name === medicationName && med.patientId === userId
+    // Load medications from localStorage
+    const allMedications = JSON.parse(localStorage.getItem("medications") || "[]");
+    const userMedications = allMedications.filter(
+      (med: Medication) => med.patientId === storedUser.userId
     );
     
-    if (medication) {
-      const updatedStock = medicationStock.map((med: any) => 
-        med.id === medication.id
-          ? {
-              ...med,
-              quantity: Math.max(0, med.quantity - 1),
-              lastUpdated: new Date().toISOString().split("T")[0],
-            }
-          : med
-      );
-      
-      localStorage.setItem("medicationStock", JSON.stringify(updatedStock));
-      
-      const historyEntry = {
-        id: Date.now().toString(),
-        date: new Date().toISOString().split('T')[0],
-        time: new Date().toLocaleTimeString(),
-        medicine: medication.name,
-        quantity: "1",
-        patientId: userId,
-        patientName: currentUser.name,
-        taken: true
-      };
-      
-      const savedHistory = localStorage.getItem("medicationHistory");
-      const history = savedHistory ? JSON.parse(savedHistory) : [];
-      localStorage.setItem("medicationHistory", JSON.stringify([...history, historyEntry]));
-      
-      toast({
-        title: "Medicine Taken",
-        description: `1 ${medication.name} pill has been taken.`,
-      });
-      
-      const upcoming = getUpcomingSchedules(userId);
-      const today = getTodaySchedules(userId);
-      
-      const medications = JSON.parse(localStorage.getItem("medications") || "[]");
-      
-      const enrichedUpcoming = upcoming.map((schedule: MedicationSchedule) => {
-        const medication = medications.find((med: any) => med.id === schedule.medicationId);
-        
-        return {
-          id: schedule.id,
-          name: medication?.name || "Unknown medication",
-          time: format(parseISO(schedule.scheduledTime), "h:mm a"),
-          scheduledTime: schedule.scheduledTime,
-          dosage: medication?.dosage || "1 tablet",
-          status: isDueNow(schedule.scheduledTime) ? "current" : "upcoming",
-          patientId: schedule.patientId,
-        };
-      });
-      
-      const enrichedToday = today.map((schedule: MedicationSchedule) => {
-        const medication = medications.find((med: any) => med.id === schedule.medicationId);
-        
-        return {
-          id: schedule.id,
-          name: medication?.name || "Unknown medication",
-          time: format(parseISO(schedule.scheduledTime), "h:mm a"),
-          scheduledTime: schedule.scheduledTime,
-          dosage: medication?.dosage || "1 tablet",
-          status: schedule.taken ? "taken" : 
-                isDueNow(schedule.scheduledTime) ? "current" : "upcoming",
-          patientId: schedule.patientId,
-        };
-      });
-      
-      setUpcomingMedications(enrichedUpcoming);
-      setTodayMedications(enrichedToday);
-      setAllMedications([
-        ...enrichedToday.filter((med: any) => med.status === "taken"),
-        ...enrichedToday.filter((med: any) => med.status === "current"),
-        ...enrichedUpcoming
-      ]);
+    // Sort by next dose time
+    userMedications.sort((a: Medication, b: Medication) => {
+      const dateA = new Date(a.nextDose).getTime();
+      const dateB = new Date(b.nextDose).getTime();
+      return dateA - dateB;
+    });
+    
+    setMedications(userMedications);
+  }, [navigate]);
+
+  const formatNextDose = (nextDose: string) => {
+    const nextDoseDate = new Date(nextDose);
+    const now = new Date();
+    
+    // Check if it's today
+    if (
+      nextDoseDate.getDate() === now.getDate() &&
+      nextDoseDate.getMonth() === now.getMonth() &&
+      nextDoseDate.getFullYear() === now.getFullYear()
+    ) {
+      return `Today at ${nextDoseDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     }
+    
+    // Check if it's tomorrow
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    if (
+      nextDoseDate.getDate() === tomorrow.getDate() &&
+      nextDoseDate.getMonth() === tomorrow.getMonth() &&
+      nextDoseDate.getFullYear() === tomorrow.getFullYear()
+    ) {
+      return `Tomorrow at ${nextDoseDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    }
+    
+    // Otherwise show full date
+    return nextDoseDate.toLocaleString([], {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
-  const getTimelineMedications = () => {
-    const takenMeds = allMedications.filter(med => med.status === "taken");
-    const currentMed = allMedications.find(med => med.status === "current");
-    const upcomingMeds = allMedications.filter(med => med.status === "upcoming");
+  const isUpcoming = (nextDose: string) => {
+    const nextDoseDate = new Date(nextDose);
+    const now = new Date();
     
-    let displayMeds = [];
-    
-    if (timelinePosition < takenMeds.length) {
-      displayMeds.push(takenMeds[takenMeds.length - 1 - timelinePosition]);
+    // Consider it upcoming if it's within the next 3 hours
+    const threeHoursFromNow = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+    return nextDoseDate <= threeHoursFromNow && nextDoseDate > now;
+  };
+
+  const isOverdue = (nextDose: string) => {
+    const nextDoseDate = new Date(nextDose);
+    const now = new Date();
+    return nextDoseDate < now;
+  };
+
+  const getNextDoseClass = (nextDose: string) => {
+    if (isOverdue(nextDose)) {
+      return "text-red-500";
     }
-    
-    if (currentMed) {
-      displayMeds.push(currentMed);
+    if (isUpcoming(nextDose)) {
+      return "text-amber-500";
     }
+    return "text-green-500";
+  };
+
+  const handleTakeMedication = (medicationId: string) => {
+    setLoading(true);
     
-    if (upcomingMeds.length > 0 && timelinePosition < upcomingMeds.length) {
-      displayMeds.push(upcomingMeds[timelinePosition]);
-    }
-    
-    while (displayMeds.length < 3 && upcomingMeds.length > displayMeds.filter(med => med.status === "upcoming").length) {
-      const nextIndex = displayMeds.filter(med => med.status === "upcoming").length;
-      if (upcomingMeds[nextIndex]) {
-        displayMeds.push(upcomingMeds[nextIndex]);
-      } else {
-        break;
+    // Simulate network request
+    setTimeout(() => {
+      try {
+        // Update the medication in localStorage
+        const allMedications = JSON.parse(localStorage.getItem("medications") || "[]");
+        const medicationIndex = allMedications.findIndex((med: Medication) => med.id === medicationId);
+        
+        if (medicationIndex !== -1) {
+          // Update medication
+          allMedications[medicationIndex].isTaken = true;
+          allMedications[medicationIndex].dosesTaken += 1;
+          allMedications[medicationIndex].dosesRemaining -= 1;
+          allMedications[medicationIndex].lastTaken = new Date().toISOString();
+          
+          // Calculate next dose time based on schedule
+          const schedule = allMedications[medicationIndex].schedule;
+          const [hours] = schedule.split(":");
+          const nextDose = new Date();
+          nextDose.setHours(nextDose.getHours() + parseInt(hours));
+          allMedications[medicationIndex].nextDose = nextDose.toISOString();
+          allMedications[medicationIndex].isTaken = false;
+          
+          // Update stock
+          const stock = JSON.parse(localStorage.getItem("medicationStock") || "[]");
+          const stockItem = stock.find((item: any) => 
+            item.name === allMedications[medicationIndex].name && 
+            item.patientId === user.userId
+          );
+          
+          if (stockItem) {
+            stockItem.quantity = Math.max(0, stockItem.quantity - 1);
+            stockItem.lastUpdated = new Date().toLocaleString();
+            localStorage.setItem("medicationStock", JSON.stringify(stock));
+            
+            // Check if stock is running low
+            if (stockItem.quantity <= stockItem.threshold) {
+              // Add notification for caretaker
+              const users = JSON.parse(localStorage.getItem("users") || "[]");
+              const caretakers = users.filter((u: any) => u.role === "caretaker");
+              
+              caretakers.forEach((caretaker: any) => {
+                const notifications = caretaker.notifications || [];
+                notifications.push({
+                  title: "Low Medication Stock",
+                  message: `${allMedications[medicationIndex].name} for ${user.name} is running low (${stockItem.quantity} remaining).`,
+                  timestamp: new Date().toISOString(),
+                  read: false
+                });
+                caretaker.notifications = notifications;
+              });
+              
+              localStorage.setItem("users", JSON.stringify(users));
+            }
+          }
+          
+          // Save updated medications
+          localStorage.setItem("medications", JSON.stringify(allMedications));
+          
+          // Update state
+          const updatedUserMedications = allMedications.filter(
+            (med: Medication) => med.patientId === user.userId
+          );
+          
+          // Sort by next dose time
+          updatedUserMedications.sort((a: Medication, b: Medication) => {
+            const dateA = new Date(a.nextDose).getTime();
+            const dateB = new Date(b.nextDose).getTime();
+            return dateA - dateB;
+          });
+          
+          setMedications(updatedUserMedications);
+          
+          // Add to medication history
+          const history = JSON.parse(localStorage.getItem("medicationHistory") || "[]");
+          history.push({
+            medicationId,
+            medicationName: allMedications[medicationIndex].name,
+            patientId: user.userId,
+            patientName: user.name,
+            timestamp: new Date().toISOString(),
+            action: "taken"
+          });
+          localStorage.setItem("medicationHistory", JSON.stringify(history));
+          
+          toast({
+            title: "Medication Taken",
+            description: `You've successfully taken ${allMedications[medicationIndex].name}.`,
+          });
+        }
+      } catch (error) {
+        console.error("Error taking medication:", error);
+        toast({
+          title: "Error",
+          description: "There was a problem recording your medication. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
       }
-    }
-    
-    while (displayMeds.length < 3 && takenMeds.length > displayMeds.filter(med => med.status === "taken").length) {
-      const nextIndex = displayMeds.filter(med => med.status === "taken").length;
-      if (takenMeds[nextIndex]) {
-        displayMeds.push(takenMeds[nextIndex]);
-      } else {
-        break;
-      }
-    }
-    
-    return displayMeds;
+    }, 1000);
   };
 
   const handleLogout = () => {
@@ -288,179 +229,126 @@ const Dashboard = () => {
     navigate("/login");
   };
 
-  const timelineMeds = getTimelineMedications();
-
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <AppSidebar role={userRole} />
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <AppSidebar role="patient" />
         <div className="flex-1">
-          <nav className="glass-panel fixed top-0 left-0 right-0 z-50">
-            <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <img 
-                  src="/lovable-uploads/b81c9421-0f7b-46a1-aec0-86a7739c4803.png" 
-                  alt="Medique Logo" 
-                  className="h-8 w-auto ml-12"
-                />
-                <div className="text-2xl font-semibold text-primary">Medique</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
-                </Button>
-              </div>
-            </div>
-            <SidebarTrigger className="absolute left-4 top-1/2 -translate-y-1/2">
-              <Button variant="ghost" size="icon" className="hover:text-primary hover:bg-primary/10">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SidebarTrigger>
-          </nav>
-
+          <StockNavbar onLogout={handleLogout} />
+          <LoadingOverlay visible={loading} message="Recording medication..." />
+          
           <div className="pt-[73px]">
             <main className="container mx-auto px-4 py-8">
-              <div className="flex flex-col items-center">
-                <h2 className="text-2xl font-bold text-primary mb-8 animate-fadeIn">Medication Timeline</h2>
-                
-                {allMedications.length === 0 && (
-                  <Card className="w-full max-w-lg p-6 text-center mb-8">
-                    <div className="py-10 flex flex-col items-center gap-4">
-                      <Bell className="h-16 w-16 text-muted-foreground" />
-                      <h3 className="text-xl font-semibold">No Medications Yet</h3>
-                      {userRole === "admin" ? (
-                        <p className="text-muted-foreground">Add medications for your patients in the Stock section.</p>
-                      ) : (
-                        <p className="text-muted-foreground">Your caretaker will add medications to your schedule soon.</p>
-                      )}
-                      <Button onClick={() => navigate("/dashboard/stock")} className="mt-4">
-                        Go to Stock
-                      </Button>
-                    </div>
-                  </Card>
-                )}
-                
-                {allMedications.length > 0 && (
-                  <>
-                    <div className="flex justify-between items-center w-full max-w-3xl mb-6 animate-fadeIn" style={{ animationDelay: "200ms" }}>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setTimelinePosition(Math.max(0, timelinePosition - 1))}
-                        disabled={timelinePosition === 0 || animating}
-                        className="flex gap-2 items-center transition-all hover:bg-primary/10 hover:text-primary hover:scale-105"
-                      >
-                        <ArrowLeft className="h-4 w-4" />
-                        Previous
-                      </Button>
-                      
-                      <div className="text-muted-foreground text-sm font-medium">
-                        Showing {timelinePosition + 1} of {Math.max(1, allMedications.length - 2)}
-                      </div>
-                      
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setTimelinePosition(Math.min(allMedications.length - 3, timelinePosition + 1))}
-                        disabled={timelinePosition >= allMedications.length - 3 || animating}
-                        className="flex gap-2 items-center transition-all hover:bg-primary/10 hover:text-primary hover:scale-105"
-                      >
-                        Next
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    
-                    <div className="w-full max-w-5xl mx-auto relative overflow-hidden py-12 rounded-xl" style={{ perspective: "1000px" }}>
-                      <div 
-                        className={`
-                          flex gap-8 justify-center w-full
-                          transition-all duration-600 ease-in-out
-                          ${animating ? 'transform -translate-x-[calc(100%/3+1rem)]' : ''}
-                        `}
-                        style={{ transformStyle: "preserve-3d" }}
-                      >
-                        {timelineMeds.map((med) => (
-                          <Card
-                            key={med.id}
-                            className={`
-                              w-1/3 p-6 flex-shrink-0 relative overflow-hidden border-0
-                              ${
-                                med.status === "taken"
-                                  ? "bg-card/90 border-l-4 border-l-green-500" 
-                                  : med.status === "current"
-                                  ? "bg-gradient-to-br from-primary/10 to-secondary/10 shadow-xl border-l-4 border-l-primary"
-                                  : "bg-card/90 border-l-4 border-l-blue-400" 
-                              }
-                              ${clickedMedId === med.id ? 'pulse-once scale-105' : ''}
-                              transition-all duration-500 ease-in-out
-                              hover:shadow-2xl hover:-translate-y-2 hover:scale-105
-                              before:content-[''] before:absolute before:inset-0 before:bg-gradient-to-r 
-                              before:from-transparent before:via-white/10 before:to-transparent 
-                              before:translate-x-[-100%] before:skew-x-[-20deg] before:animate-shimmer
-                            `}
-                            style={{
-                              boxShadow: med.status === "current" 
-                                ? "0 10px 25px -5px rgba(79, 209, 197, 0.3)" 
-                                : "",
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {user && user.name ? `Hello, ${user.name}` : 'Hello'}
+                </h1>
+                <p className="text-muted-foreground">Here are your medication reminders for today</p>
+              </div>
+              
+              <div className="grid gap-6">
+                {medications.length === 0 ? (
+                  <div className="text-center py-12 bg-white rounded-lg shadow-sm border">
+                    <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h2 className="text-xl font-semibold text-gray-700">No medications scheduled</h2>
+                    <p className="text-muted-foreground mt-2 mb-6">You don't have any medications scheduled at the moment.</p>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button className="mx-auto">
+                          <Plus className="mr-2 h-4 w-4" />
+                          Request Medication
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Request New Medication</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <div className="space-y-2">
+                            <label htmlFor="time" className="text-sm font-medium leading-none">
+                              Preferred Time
+                            </label>
+                            <Input
+                              id="time"
+                              type="time"
+                              value={newMedicationTime}
+                              onChange={(e) => setNewMedicationTime(e.target.value)}
+                            />
+                          </div>
+                          <Button 
+                            className="w-full" 
+                            onClick={() => {
+                              // Notify caretaker of request
+                              const users = JSON.parse(localStorage.getItem("users") || "[]");
+                              const caretakers = users.filter((u: any) => u.role === "caretaker");
+                              
+                              caretakers.forEach((caretaker: any) => {
+                                const notifications = caretaker.notifications || [];
+                                notifications.push({
+                                  title: "Medication Request",
+                                  message: `${user.name} has requested medication at ${newMedicationTime}.`,
+                                  timestamp: new Date().toISOString(),
+                                  read: false
+                                });
+                                caretaker.notifications = notifications;
+                              });
+                              
+                              localStorage.setItem("users", JSON.stringify(users));
+                              setNewMedicationTime("");
+                              
+                              toast({
+                                title: "Request Sent",
+                                description: "Your medication request has been sent to your caretaker.",
+                              });
                             }}
                           >
-                            <div className="flex flex-col items-center gap-4 relative z-10">
-                              {med.status === "taken" && 
-                                <CheckCircle2 className="w-12 h-12 text-green-500 animate-fadeIn" />
-                              }
-                              {med.status === "current" && 
-                                <div className="relative">
-                                  <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping"></div>
-                                  <Timer className="w-16 h-16 text-primary relative z-10" />
-                                </div>
-                              }
-                              {med.status === "upcoming" && 
-                                <Clock className="w-12 h-12 text-blue-500 animate-fadeIn" />
-                              }
-                              
-                              <h3 className={`${med.status === "current" ? "text-2xl font-bold" : "text-xl font-semibold"} transition-all duration-300`}>
-                                {med.status === "taken" ? "Taken" : med.status === "current" ? "Next Dose" : "Upcoming"}
-                              </h3>
-                              
-                              <div className="text-center">
-                                <p className={`${med.status === "current" ? "text-xl" : "text-lg"} font-medium text-primary transition-all duration-300`}>
-                                  {med.name}
-                                </p>
-                                <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-muted-foreground transition-all duration-300`}>
-                                  {med.time}
-                                </p>
-                                <p className={`${med.status === "current" ? "text-lg" : "text-sm"} text-muted-foreground transition-all duration-300`}>
-                                  {med.dosage}
-                                </p>
-                              </div>
-                              
-                              {med.status === "current" && (
-                                <Button 
-                                  className="mt-4 w-full group relative overflow-hidden"
-                                  onClick={() => handleMarkAsTaken(med.id)}
-                                >
-                                  <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-green-400 to-green-500 transition-transform duration-300 transform translate-y-full group-hover:translate-y-0"></span>
-                                  <span className="relative flex items-center justify-center gap-2 transition-all duration-300 group-hover:text-white">
-                                    <CheckCircle2 className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
-                                    Mark as Taken
-                                  </span>
-                                </Button>
-                              )}
-                            </div>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                <div className="mt-12 text-center max-w-2xl animate-fadeIn" style={{ animationDelay: "400ms" }}>
-                  <div className="bg-accent text-accent-foreground rounded-lg p-6 shadow-sm border border-accent/30 hover-lift">
-                    <h3 className="text-lg font-semibold text-primary mb-2">💡 Did you know?</h3>
-                    <p className="text-card-foreground">{randomFact}</p>
+                            Send Request
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </div>
-                </div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {medications.map((medication) => (
+                      <Card key={medication.id} className={`overflow-hidden transition-all duration-300 ${medication.isTaken ? 'opacity-70' : ''}`}>
+                        <CardContent className="p-6">
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <h3 className="font-semibold text-lg">{medication.name}</h3>
+                              <div className={`flex items-center mt-1 text-sm ${getNextDoseClass(medication.nextDose)}`}>
+                                <Clock className="h-4 w-4 mr-1" />
+                                <span>{formatNextDose(medication.nextDose)}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center text-sm">
+                              <Calendar className="h-4 w-4 mr-1 text-muted-foreground" />
+                              <span className="text-muted-foreground">{medication.schedule}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-between text-sm mb-4">
+                            <span className="text-muted-foreground">Doses taken</span>
+                            <span>{medication.dosesTaken}</span>
+                          </div>
+                          
+                          <div className="flex justify-between text-sm mb-6">
+                            <span className="text-muted-foreground">Remaining</span>
+                            <span>{medication.dosesRemaining}</span>
+                          </div>
+                          
+                          <Button 
+                            className="w-full"
+                            disabled={medication.isTaken}
+                            onClick={() => handleTakeMedication(medication.id)}
+                          >
+                            {medication.isTaken ? "Already Taken" : "Mark as Taken"}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </div>
             </main>
           </div>

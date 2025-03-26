@@ -137,8 +137,8 @@ export function StockNavbar({
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80" align="end">
-              <div className="flex justify-between items-center mb-2">
+            <PopoverContent className="w-80 bg-white shadow-lg border p-0" align="end">
+              <div className="flex justify-between items-center p-3 border-b">
                 <h3 className="font-medium">Notifications</h3>
                 {unreadCount > 0 && (
                   <Button variant="ghost" size="sm" onClick={markAllAsRead}>
@@ -150,13 +150,13 @@ export function StockNavbar({
                 {notifications.length === 0 ? (
                   <p className="text-center text-muted-foreground py-4">No notifications</p>
                 ) : (
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col">
                     {notifications.map((notification, index) => (
                       <div 
                         key={index} 
                         className={cn(
-                          "p-3 rounded-md text-sm",
-                          notification.read ? "bg-muted/50" : "bg-primary/5 border-l-2 border-primary"
+                          "p-3 border-b last:border-b-0",
+                          notification.read ? "bg-white" : "bg-primary/5 border-l-2 border-primary"
                         )}
                       >
                         <p className="font-medium">{notification.title}</p>
