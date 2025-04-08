@@ -9,8 +9,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StockNavbar } from "@/components/stock/StockNavbar";
 import { useToast } from "@/hooks/use-toast";
-import { UserRound, Copy, CheckCircle2, UserPlus, Users } from "lucide-react";
+import { 
+  UserRound, 
+  Copy, 
+  CheckCircle2, 
+  UserPlus, 
+  Users, 
+  Trash2,
+  AlertTriangle 
+} from "lucide-react";
 import { v4 as uuidv4 } from 'uuid';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -22,6 +40,7 @@ const Profile = () => {
   const [uniqueCode, setUniqueCode] = useState("");
   const [copied, setCopied] = useState(false);
   const [connectedUsers, setConnectedUsers] = useState<any[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -117,6 +136,47 @@ const Profile = () => {
     setTimeout(() => setCopied(false), 3000);
   };
 
+  const handleDeleteProfile = () => {
+    // Close the dialog
+    setDeleteDialogOpen(false);
+    
+    // Delete the user from users array
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const updatedUsers = users.filter((u: any) => u.userId !== user.userId);
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
+    
+    // Remove connections to this user from other users
+    if (role === "patient") {
+      // Remove patient from caretakers' connectedPatients
+      updatedUsers.forEach((u: any) => {
+        if (u.connectedPatients && u.connectedPatients.includes(user.userId)) {
+          u.connectedPatients = u.connectedPatients.filter((id: string) => id !== user.userId);
+        }
+      });
+    } else {
+      // Remove caretaker from patients' connectedCaretakers
+      updatedUsers.forEach((u: any) => {
+        if (u.connectedCaretakers && u.connectedCaretakers.includes(user.userId)) {
+          u.connectedCaretakers = u.connectedCaretakers.filter((id: string) => id !== user.userId);
+        }
+      });
+    }
+    
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
+    
+    // Remove current user
+    localStorage.removeItem("currentUser");
+    
+    // Show toast notification
+    toast({
+      title: "Account deleted",
+      description: "Your account has been successfully deleted.",
+    });
+    
+    // Redirect to login page
+    navigate("/login");
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
     navigate("/login");
@@ -198,9 +258,20 @@ const Profile = () => {
                           </div>
                         )}
                         
-                        <Button onClick={handleUpdateProfile} className="w-full">
-                          Update Profile
-                        </Button>
+                        <div className="flex flex-col space-y-4">
+                          <Button onClick={handleUpdateProfile} className="w-full">
+                            Update Profile
+                          </Button>
+                          
+                          <Button 
+                            variant="destructive" 
+                            className="w-full"
+                            onClick={() => setDeleteDialogOpen(true)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete Account
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -255,6 +326,31 @@ const Profile = () => {
           </div>
         </div>
       </div>
+      
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Delete your account?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your account
+              and remove all your data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteProfile}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Account
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </SidebarProvider>
   );
 };
