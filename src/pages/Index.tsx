@@ -1,22 +1,17 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Package, Shield, Activity, Users } from "lucide-react";
-
 const Index = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-
   const handleGetStarted = () => {
     setIsLoading(true);
     setTimeout(() => {
       navigate("/login");
     }, 500);
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+  return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Hero Section */}
       <header className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center">
@@ -43,31 +38,17 @@ const Index = () => {
               Track, manage, and never miss your medications again with our intuitive platform for patients and caretakers.
             </p>
             <div className="pt-4 flex flex-col sm:flex-row gap-4">
-              <Button
-                size="lg"
-                className="text-lg px-8 py-6"
-                onClick={handleGetStarted}
-                disabled={isLoading}
-              >
+              <Button size="lg" className="text-lg px-8 py-6" onClick={handleGetStarted} disabled={isLoading}>
                 {isLoading ? "Loading..." : "Get Started"} 
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="text-lg px-8 py-6"
-                onClick={() => navigate("/login")}
-              >
+              <Button variant="outline" size="lg" className="text-lg px-8 py-6" onClick={() => navigate("/login")}>
                 Login
               </Button>
             </div>
           </div>
           <div className="md:w-1/2 mt-10 md:mt-0 flex justify-center">
-            <img
-              src="/lovable-uploads/8986d4a7-fac0-4eac-a1ea-c249d13451b3.png"
-              alt="Medical Professional"
-              className="max-w-full h-auto"
-            />
+            <img alt="Medical Professional" className="max-w-full h-auto" src="/lovable-uploads/cdebae43-17be-48c3-a97b-7ab0ebc19bf4.png" />
           </div>
         </section>
 
@@ -230,8 +211,6 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
