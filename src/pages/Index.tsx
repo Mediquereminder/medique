@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -63,7 +64,7 @@ const Index = () => {
           </div>
           <div className="md:w-1/2 mt-10 md:mt-0 flex justify-center">
             <img
-              src="/lovable-uploads/05c065f1-f026-42c0-9b61-23d3307ef2a7.png"
+              src="/lovable-uploads/8986d4a7-fac0-4eac-a1ea-c249d13451b3.png"
               alt="Medical Professional"
               className="max-w-full h-auto"
             />
