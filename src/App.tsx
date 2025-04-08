@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useState, createContext, useContext } from "react";
+import { useState, createContext, useContext, useEffect } from "react";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
@@ -21,6 +21,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminPatients from "./pages/AdminPatients";
 import AdminStock from "./pages/AdminStock";
 import AdminAlerts from "./pages/AdminAlerts";
+import { initializeData } from "./utils/initializeData";
 
 // Create auth context
 interface AuthContextType {
@@ -39,6 +40,11 @@ const queryClient = new QueryClient();
 
 const App = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  // Initialize demo data when the app loads
+  useEffect(() => {
+    initializeData();
+  }, []);
 
   const handleLogout = () => {
     setIsLoggingOut(true);
