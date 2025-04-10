@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Calendar, Clock, Plus, Trash2, AlertTriangle, Eye, Pill, Package, Shield } from "lucide-react";
@@ -72,8 +71,7 @@ const AdminStock = () => {
     time: "08:00",
     startDate: new Date().toISOString().split('T')[0],
     endDate: "",
-    description: "",
-    timeLimit: "60" // Default time limit of 60 minutes
+    description: ""
   });
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -212,7 +210,7 @@ const AdminStock = () => {
       return;
     }
     
-    // Add medication to the schedule with the 'active' property and timeLimit
+    // Add medication to the schedule with the 'active' property
     const medication = {
       name: newMedication.name,
       dosage: newMedication.dosage,
@@ -223,8 +221,7 @@ const AdminStock = () => {
       description: newMedication.description || undefined,
       patientId: selectedPatientId,
       createdBy: currentUser.userId,
-      active: true,
-      timeLimit: parseInt(newMedication.timeLimit) // Add the time limit
+      active: true // Add the missing 'active' property
     };
     
     addMedication(medication);
@@ -255,8 +252,7 @@ const AdminStock = () => {
       time: "08:00",
       startDate: new Date().toISOString().split('T')[0],
       endDate: "",
-      description: "",
-      timeLimit: "60"
+      description: ""
     });
     
     setIsMedicationDialogOpen(false);
@@ -425,20 +421,6 @@ const AdminStock = () => {
                             onChange={(e) => setNewMedication(prev => ({ ...prev, endDate: e.target.value }))}
                           />
                         </div>
-                      </div>
-                      
-                      <div className="grid gap-2">
-                        <Label htmlFor="time-limit">Time Window (minutes)</Label>
-                        <Input
-                          id="time-limit"
-                          type="number"
-                          value={newMedication.timeLimit}
-                          onChange={(e) => setNewMedication(prev => ({ ...prev, timeLimit: e.target.value }))}
-                          placeholder="Time window to take medication (in minutes)"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Patient must take medication within this time after scheduled dose time
-                        </p>
                       </div>
                       
                       <div className="grid gap-2">
