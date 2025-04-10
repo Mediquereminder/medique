@@ -1,4 +1,3 @@
-
 import { format, addDays, isAfter, isBefore, parseISO } from "date-fns";
 
 // Types for our medication system
@@ -14,6 +13,7 @@ export interface Medication {
   patientId: string;
   createdBy: string;
   active: boolean;
+  timeLimit?: number; // Time window in minutes to take medication
 }
 
 export interface MedicationSchedule {
@@ -140,7 +140,9 @@ export const addMedication = (medication: Omit<Medication, "id">) => {
   // Add notification for the patient
   addNotification(medication.patientId, {
     title: "New Medication Added",
-    message: `${medication.name} (${medication.dosage}) has been added to your schedule. First dose at ${medication.time}.`,
+    message: `${medication.name} (${medication.dosage}) has been added to your schedule. First dose at ${medication.time}.${
+      medication.timeLimit ? ` Take within ${medication.timeLimit} minutes of scheduled time.` : ''
+    }`,
     timestamp: new Date().toISOString(),
     type: "medication-added",
     read: false
@@ -349,10 +351,15 @@ export const checkDueMedications = () => {
     const medication = medications.find((med: Medication) => med.id === schedule.medicationId);
     if (!medication) return;
     
+    // Get time limit message if applicable
+    const timeLimitMsg = medication.timeLimit 
+      ? ` Take within ${medication.timeLimit} minutes.` 
+      : '';
+    
     // Notify patient
     addNotification(schedule.patientId, {
       title: "Medication Due Soon",
-      message: `${medication.name} (${medication.dosage}) is due at ${format(parseISO(schedule.scheduledTime), "h:mm a")}.`,
+      message: `${medication.name} (${medication.dosage}) is due at ${format(parseISO(schedule.scheduledTime), "h:mm a")}.${timeLimitMsg}`,
       timestamp: new Date().toISOString(),
       type: "medication-due",
       read: false
@@ -361,7 +368,7 @@ export const checkDueMedications = () => {
     // Notify caretakers
     notifyCaretakers(schedule.patientId, {
       title: `Medication Due Soon for Patient`,
-      message: `${medication.name} (${medication.dosage}) is due at ${format(parseISO(schedule.scheduledTime), "h:mm a")} for your patient.`,
+      message: `${medication.name} (${medication.dosage}) is due at ${format(parseISO(schedule.scheduledTime), "h:mm a")} for your patient.${timeLimitMsg}`,
       timestamp: new Date().toISOString(),
       type: "medication-due",
       read: false

@@ -1,10 +1,11 @@
+
 import { useEffect, useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Plus } from "lucide-react";
+import { Calendar, Clock, Plus, AlertCircle } from "lucide-react";
 import { 
   Dialog, 
   DialogContent, 
@@ -27,6 +28,7 @@ interface Medication {
   dosesRemaining: number;
   isTaken: boolean;
   lastTaken?: string;
+  timeLimit?: number; // Time limit in minutes
 }
 
 const Dashboard = () => {
@@ -117,6 +119,44 @@ const Dashboard = () => {
       return "text-amber-500";
     }
     return "text-green-500";
+  };
+
+  // Function to calculate the time limit window text
+  const getTimeLimitText = (nextDose: string, timeLimit?: number) => {
+    if (!timeLimit) return null;
+    
+    const nextDoseDate = new Date(nextDose);
+    const endTime = new Date(nextDoseDate.getTime() + (timeLimit * 60 * 1000));
+    
+    return `Take within ${timeLimit} min (by ${endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`;
+  };
+
+  // Function to check if a medication is within its time limit window
+  const isWithinTimeLimit = (nextDose: string, timeLimit?: number) => {
+    if (!timeLimit) return true;
+    
+    const nextDoseDate = new Date(nextDose);
+    const now = new Date();
+    const endTime = new Date(nextDoseDate.getTime() + (timeLimit * 60 * 1000));
+    
+    return now >= nextDoseDate && now <= endTime;
+  };
+
+  // Function to get the time remaining in the time window
+  const getTimeRemaining = (nextDose: string, timeLimit?: number) => {
+    if (!timeLimit) return null;
+    
+    const nextDoseDate = new Date(nextDose);
+    const now = new Date();
+    const endTime = new Date(nextDoseDate.getTime() + (timeLimit * 60 * 1000));
+    
+    if (now < nextDoseDate) return null; // Time window hasn't started
+    if (now > endTime) return null; // Time window has ended
+    
+    const remainingMs = endTime.getTime() - now.getTime();
+    const remainingMin = Math.floor(remainingMs / (60 * 1000));
+    
+    return remainingMin;
   };
 
   const handleTakeMedication = (medicationId: string) => {
@@ -311,7 +351,14 @@ const Dashboard = () => {
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {medications.map((medication) => (
-                      <Card key={medication.id} className={`overflow-hidden transition-all duration-300 ${medication.isTaken ? 'opacity-70' : ''}`}>
+                      <Card 
+                        key={medication.id} 
+                        className={`overflow-hidden transition-all duration-300 ${
+                          medication.isTaken ? 'opacity-70' : 
+                          (isOverdue(medication.nextDose) && !isWithinTimeLimit(medication.nextDose, medication.timeLimit)) ? 'border-red-500 border-2' : 
+                          (isUpcoming(medication.nextDose)) ? 'border-amber-300' : ''
+                        }`}
+                      >
                         <CardContent className="p-6">
                           <div className="flex justify-between items-start mb-4">
                             <div>
@@ -320,6 +367,20 @@ const Dashboard = () => {
                                 <Clock className="h-4 w-4 mr-1" />
                                 <span>{formatNextDose(medication.nextDose)}</span>
                               </div>
+                              
+                              {medication.timeLimit && (
+                                <div className="flex items-center mt-1 text-sm text-gray-600">
+                                  <AlertCircle className="h-4 w-4 mr-1 text-amber-500" />
+                                  <span>
+                                    {isOverdue(medication.nextDose) ? 
+                                      (isWithinTimeLimit(medication.nextDose, medication.timeLimit) ? 
+                                        `${getTimeRemaining(medication.nextDose, medication.timeLimit)} minutes remaining` : 
+                                        'Time window expired') : 
+                                      getTimeLimitText(medication.nextDose, medication.timeLimit)
+                                    }
+                                  </span>
+                                </div>
+                              )}
                             </div>
                             <div className="flex items-center text-sm">
                               <Calendar className="h-4 w-4 mr-1 text-muted-foreground" />
@@ -339,10 +400,12 @@ const Dashboard = () => {
                           
                           <Button 
                             className="w-full"
-                            disabled={medication.isTaken}
+                            disabled={medication.isTaken || (isOverdue(medication.nextDose) && !isWithinTimeLimit(medication.nextDose, medication.timeLimit))}
                             onClick={() => handleTakeMedication(medication.id)}
                           >
-                            {medication.isTaken ? "Already Taken" : "Mark as Taken"}
+                            {medication.isTaken ? "Already Taken" : 
+                             (isOverdue(medication.nextDose) && !isWithinTimeLimit(medication.nextDose, medication.timeLimit)) ? 
+                              "Time Window Expired" : "Mark as Taken"}
                           </Button>
                         </CardContent>
                       </Card>
