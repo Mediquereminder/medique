@@ -16,25 +16,31 @@ import { Input } from "@/components/ui/input";
 import { StockNavbar } from "@/components/stock/StockNavbar";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import { toast } from "@/hooks/use-toast";
+import { getTodaySchedules, markMedicationTaken } from "@/utils/medicationService";
+import { format, parseISO } from "date-fns";
+import { useReminderChecker } from "@/hooks/useReminderChecker";
 
-interface Medication {
+interface MedicationSchedule {
   id: string;
-  name: string;
-  nextDose: string;
-  schedule: string;
+  medicationId: string;
+  scheduledTime: string; // ISO string
   patientId: string;
-  dosesTaken: number;
-  dosesRemaining: number;
-  isTaken: boolean;
-  lastTaken?: string;
+  taken: boolean;
+  skipped: boolean;
+  takenTime?: string; // ISO string, when medication was taken
+  medicationName?: string; // Added for display purposes
+  medicationDosage?: string; // Added for display purposes
 }
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [medications, setMedications] = useState<Medication[]>([]);
+  const [schedules, setSchedules] = useState<MedicationSchedule[]>([]);
   const [newMedicationTime, setNewMedicationTime] = useState("");
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>({});
+  
+  // Use the reminder checker hook
+  useReminderChecker();
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("currentUser") || "{}");
@@ -45,172 +51,122 @@ const Dashboard = () => {
     
     setUser(storedUser);
 
-    // Load medications from localStorage
-    const allMedications = JSON.parse(localStorage.getItem("medications") || "[]");
-    const userMedications = allMedications.filter(
-      (med: Medication) => med.patientId === storedUser.userId
-    );
+    // Load medications using the medicationService
+    loadMedications(storedUser.userId);
     
-    // Sort by next dose time
-    userMedications.sort((a: Medication, b: Medication) => {
-      const dateA = new Date(a.nextDose).getTime();
-      const dateB = new Date(b.nextDose).getTime();
-      return dateA - dateB;
-    });
+    // Set up interval to check for new schedules every minute
+    const intervalId = setInterval(() => {
+      loadMedications(storedUser.userId);
+    }, 60000);
     
-    setMedications(userMedications);
+    return () => clearInterval(intervalId);
   }, [navigate]);
 
-  const formatNextDose = (nextDose: string) => {
-    const nextDoseDate = new Date(nextDose);
-    const now = new Date();
+  const loadMedications = (userId: string) => {
+    // Get today's schedules for the patient
+    const todaySchedules = getTodaySchedules(userId);
     
-    // Check if it's today
-    if (
-      nextDoseDate.getDate() === now.getDate() &&
-      nextDoseDate.getMonth() === now.getMonth() &&
-      nextDoseDate.getFullYear() === now.getFullYear()
-    ) {
-      return `Today at ${nextDoseDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    }
-    
-    // Check if it's tomorrow
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    if (
-      nextDoseDate.getDate() === tomorrow.getDate() &&
-      nextDoseDate.getMonth() === tomorrow.getMonth() &&
-      nextDoseDate.getFullYear() === tomorrow.getFullYear()
-    ) {
-      return `Tomorrow at ${nextDoseDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    }
-    
-    // Otherwise show full date
-    return nextDoseDate.toLocaleString([], {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    // Enrich schedules with medication information
+    const medications = JSON.parse(localStorage.getItem("medications") || "[]");
+    const enrichedSchedules = todaySchedules.map((schedule: MedicationSchedule) => {
+      const medication = medications.find((med: any) => med.id === schedule.medicationId);
+      return {
+        ...schedule,
+        medicationName: medication?.name || "Unknown medication",
+        medicationDosage: medication?.dosage || ""
+      };
     });
-  };
-
-  const isUpcoming = (nextDose: string) => {
-    const nextDoseDate = new Date(nextDose);
-    const now = new Date();
     
-    // Consider it upcoming if it's within the next 3 hours
-    const threeHoursFromNow = new Date(now.getTime() + 3 * 60 * 60 * 1000);
-    return nextDoseDate <= threeHoursFromNow && nextDoseDate > now;
+    // Sort schedules by time
+    enrichedSchedules.sort((a: MedicationSchedule, b: MedicationSchedule) => {
+      return new Date(a.scheduledTime).getTime() - new Date(b.scheduledTime).getTime();
+    });
+    
+    setSchedules(enrichedSchedules);
   };
 
-  const isOverdue = (nextDose: string) => {
-    const nextDoseDate = new Date(nextDose);
-    const now = new Date();
-    return nextDoseDate < now;
+  const formatScheduledTime = (scheduledTime: string) => {
+    try {
+      const scheduledDate = parseISO(scheduledTime);
+      const now = new Date();
+      
+      // Check if it's today
+      if (
+        scheduledDate.getDate() === now.getDate() &&
+        scheduledDate.getMonth() === now.getMonth() &&
+        scheduledDate.getFullYear() === now.getFullYear()
+      ) {
+        return `Today at ${format(scheduledDate, "h:mm a")}`;
+      }
+      
+      // Check if it's tomorrow
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      if (
+        scheduledDate.getDate() === tomorrow.getDate() &&
+        scheduledDate.getMonth() === tomorrow.getMonth() &&
+        scheduledDate.getFullYear() === tomorrow.getFullYear()
+      ) {
+        return `Tomorrow at ${format(scheduledDate, "h:mm a")}`;
+      }
+      
+      // Otherwise show full date
+      return format(scheduledDate, "MMM d, h:mm a");
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "Invalid date";
+    }
   };
 
-  const getNextDoseClass = (nextDose: string) => {
-    if (isOverdue(nextDose)) {
+  const isUpcoming = (scheduledTime: string) => {
+    try {
+      const scheduledDate = parseISO(scheduledTime);
+      const now = new Date();
+      
+      // Consider it upcoming if it's within the next 3 hours
+      const threeHoursFromNow = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+      return scheduledDate <= threeHoursFromNow && scheduledDate > now;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const isOverdue = (scheduledTime: string) => {
+    try {
+      const scheduledDate = parseISO(scheduledTime);
+      const now = new Date();
+      return scheduledDate < now;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const getScheduleClass = (scheduledTime: string) => {
+    if (isOverdue(scheduledTime)) {
       return "text-red-500";
     }
-    if (isUpcoming(nextDose)) {
+    if (isUpcoming(scheduledTime)) {
       return "text-amber-500";
     }
     return "text-green-500";
   };
 
-  const handleTakeMedication = (medicationId: string) => {
+  const handleTakeMedication = (scheduleId: string) => {
     setLoading(true);
     
     // Simulate network request
     setTimeout(() => {
       try {
-        // Update the medication in localStorage
-        const allMedications = JSON.parse(localStorage.getItem("medications") || "[]");
-        const medicationIndex = allMedications.findIndex((med: Medication) => med.id === medicationId);
+        // Mark medication as taken using medicationService
+        markMedicationTaken(scheduleId);
         
-        if (medicationIndex !== -1) {
-          // Update medication
-          allMedications[medicationIndex].isTaken = true;
-          allMedications[medicationIndex].dosesTaken += 1;
-          allMedications[medicationIndex].dosesRemaining -= 1;
-          allMedications[medicationIndex].lastTaken = new Date().toISOString();
-          
-          // Calculate next dose time based on schedule
-          const schedule = allMedications[medicationIndex].schedule;
-          const [hours] = schedule.split(":");
-          const nextDose = new Date();
-          nextDose.setHours(nextDose.getHours() + parseInt(hours));
-          allMedications[medicationIndex].nextDose = nextDose.toISOString();
-          allMedications[medicationIndex].isTaken = false;
-          
-          // Update stock
-          const stock = JSON.parse(localStorage.getItem("medicationStock") || "[]");
-          const stockItem = stock.find((item: any) => 
-            item.name === allMedications[medicationIndex].name && 
-            item.patientId === user.userId
-          );
-          
-          if (stockItem) {
-            stockItem.quantity = Math.max(0, stockItem.quantity - 1);
-            stockItem.lastUpdated = new Date().toLocaleString();
-            localStorage.setItem("medicationStock", JSON.stringify(stock));
-            
-            // Check if stock is running low
-            if (stockItem.quantity <= stockItem.threshold) {
-              // Add notification for caretaker
-              const users = JSON.parse(localStorage.getItem("users") || "[]");
-              const caretakers = users.filter((u: any) => u.role === "caretaker");
-              
-              caretakers.forEach((caretaker: any) => {
-                const notifications = caretaker.notifications || [];
-                notifications.push({
-                  title: "Low Medication Stock",
-                  message: `${allMedications[medicationIndex].name} for ${user.name} is running low (${stockItem.quantity} remaining).`,
-                  timestamp: new Date().toISOString(),
-                  read: false
-                });
-                caretaker.notifications = notifications;
-              });
-              
-              localStorage.setItem("users", JSON.stringify(users));
-            }
-          }
-          
-          // Save updated medications
-          localStorage.setItem("medications", JSON.stringify(allMedications));
-          
-          // Update state
-          const updatedUserMedications = allMedications.filter(
-            (med: Medication) => med.patientId === user.userId
-          );
-          
-          // Sort by next dose time
-          updatedUserMedications.sort((a: Medication, b: Medication) => {
-            const dateA = new Date(a.nextDose).getTime();
-            const dateB = new Date(b.nextDose).getTime();
-            return dateA - dateB;
-          });
-          
-          setMedications(updatedUserMedications);
-          
-          // Add to medication history
-          const history = JSON.parse(localStorage.getItem("medicationHistory") || "[]");
-          history.push({
-            medicationId,
-            medicationName: allMedications[medicationIndex].name,
-            patientId: user.userId,
-            patientName: user.name,
-            timestamp: new Date().toISOString(),
-            action: "taken"
-          });
-          localStorage.setItem("medicationHistory", JSON.stringify(history));
-          
-          toast({
-            title: "Medication Taken",
-            description: `You've successfully taken ${allMedications[medicationIndex].name}.`,
-          });
-        }
+        // Refresh the schedules
+        loadMedications(user.userId);
+        
+        toast({
+          title: "Medication Taken",
+          description: "Your medication has been recorded.",
+        });
       } catch (error) {
         console.error("Error taking medication:", error);
         toast({
@@ -247,7 +203,7 @@ const Dashboard = () => {
               </div>
               
               <div className="grid gap-6">
-                {medications.length === 0 ? (
+                {schedules.length === 0 ? (
                   <div className="text-center py-12 bg-white rounded-lg shadow-sm border">
                     <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h2 className="text-xl font-semibold text-gray-700">No medications scheduled</h2>
@@ -310,39 +266,29 @@ const Dashboard = () => {
                   </div>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {medications.map((medication) => (
-                      <Card key={medication.id} className={`overflow-hidden transition-all duration-300 ${medication.isTaken ? 'opacity-70' : ''}`}>
+                    {schedules.map((schedule) => (
+                      <Card key={schedule.id} className={`overflow-hidden transition-all duration-300 ${schedule.taken ? 'opacity-70' : ''}`}>
                         <CardContent className="p-6">
                           <div className="flex justify-between items-start mb-4">
                             <div>
-                              <h3 className="font-semibold text-lg">{medication.name}</h3>
-                              <div className={`flex items-center mt-1 text-sm ${getNextDoseClass(medication.nextDose)}`}>
+                              <h3 className="font-semibold text-lg">{schedule.medicationName}</h3>
+                              <div className={`flex items-center mt-1 text-sm ${getScheduleClass(schedule.scheduledTime)}`}>
                                 <Clock className="h-4 w-4 mr-1" />
-                                <span>{formatNextDose(medication.nextDose)}</span>
+                                <span>{formatScheduledTime(schedule.scheduledTime)}</span>
                               </div>
                             </div>
                             <div className="flex items-center text-sm">
                               <Calendar className="h-4 w-4 mr-1 text-muted-foreground" />
-                              <span className="text-muted-foreground">{medication.schedule}</span>
+                              <span className="text-muted-foreground">{schedule.medicationDosage}</span>
                             </div>
-                          </div>
-                          
-                          <div className="flex justify-between text-sm mb-4">
-                            <span className="text-muted-foreground">Doses taken</span>
-                            <span>{medication.dosesTaken}</span>
-                          </div>
-                          
-                          <div className="flex justify-between text-sm mb-6">
-                            <span className="text-muted-foreground">Remaining</span>
-                            <span>{medication.dosesRemaining}</span>
                           </div>
                           
                           <Button 
                             className="w-full"
-                            disabled={medication.isTaken}
-                            onClick={() => handleTakeMedication(medication.id)}
+                            disabled={schedule.taken}
+                            onClick={() => handleTakeMedication(schedule.id)}
                           >
-                            {medication.isTaken ? "Already Taken" : "Mark as Taken"}
+                            {schedule.taken ? "Already Taken" : "Mark as Taken"}
                           </Button>
                         </CardContent>
                       </Card>

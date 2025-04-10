@@ -149,74 +149,93 @@ export const addMedication = (medication: Omit<Medication, "id">) => {
   return newMedication;
 };
 
-// Generate schedules for a medication (for the next 7 days)
+// Generate schedules for a medication (for the next 30 days)
 const generateSchedules = (medication: Medication) => {
   const schedules = JSON.parse(localStorage.getItem("medicationSchedules") || "[]");
   const newSchedules: MedicationSchedule[] = [];
   
-  const startDate = parseISO(medication.startDate);
-  const endDate = medication.endDate ? parseISO(medication.endDate) : addDays(new Date(), 30); // Default to 30 days if no end date
-  
-  // Generate schedules based on frequency
-  let currentDate = new Date(startDate);
-  
-  while (isBefore(currentDate, endDate)) {
-    const dateStr = format(currentDate, "yyyy-MM-dd");
+  try {
+    const startDate = parseISO(medication.startDate);
+    const endDate = medication.endDate ? parseISO(medication.endDate) : addDays(new Date(), 30); // Default to 30 days if no end date
     
-    // Handle different frequencies
-    if (medication.frequency === "daily") {
-      newSchedules.push({
-        id: `${medication.id}-${dateStr}`,
-        medicationId: medication.id,
-        scheduledTime: `${dateStr}T${medication.time}:00`,
-        patientId: medication.patientId,
-        taken: false,
-        skipped: false
-      });
-    } else if (medication.frequency === "twice-daily") {
-      // Morning dose (use the time provided)
-      newSchedules.push({
-        id: `${medication.id}-${dateStr}-morning`,
-        medicationId: medication.id,
-        scheduledTime: `${dateStr}T${medication.time}:00`,
-        patientId: medication.patientId,
-        taken: false,
-        skipped: false
-      });
+    // Generate schedules based on frequency
+    let currentDate = new Date(startDate);
+    
+    while (isBefore(currentDate, endDate)) {
+      const dateStr = format(currentDate, "yyyy-MM-dd");
       
-      // Evening dose (12 hours later)
-      const [hours, minutes] = medication.time.split(":");
-      const eveningHours = (parseInt(hours) + 12) % 24;
-      const eveningTime = `${eveningHours.toString().padStart(2, "0")}:${minutes}`;
-      
-      newSchedules.push({
-        id: `${medication.id}-${dateStr}-evening`,
-        medicationId: medication.id,
-        scheduledTime: `${dateStr}T${eveningTime}:00`,
-        patientId: medication.patientId,
-        taken: false,
-        skipped: false
-      });
-    } else if (medication.frequency === "weekly") {
-      // Only add if this is the same day of week as the start date
-      if (format(currentDate, "E") === format(startDate, "E")) {
+      // Handle different frequencies
+      if (medication.frequency === "daily") {
+        const scheduledTime = `${dateStr}T${medication.time}:00`;
+        
         newSchedules.push({
           id: `${medication.id}-${dateStr}`,
+          medicationId: medication.id,
+          scheduledTime,
+          patientId: medication.patientId,
+          taken: false,
+          skipped: false
+        });
+      } else if (medication.frequency === "twice-daily") {
+        // Morning dose (use the time provided)
+        newSchedules.push({
+          id: `${medication.id}-${dateStr}-morning`,
           medicationId: medication.id,
           scheduledTime: `${dateStr}T${medication.time}:00`,
           patientId: medication.patientId,
           taken: false,
           skipped: false
         });
+        
+        // Evening dose (12 hours later)
+        const [hours, minutes] = medication.time.split(":");
+        const eveningHours = (parseInt(hours) + 12) % 24;
+        const eveningTime = `${eveningHours.toString().padStart(2, "0")}:${minutes}`;
+        
+        newSchedules.push({
+          id: `${medication.id}-${dateStr}-evening`,
+          medicationId: medication.id,
+          scheduledTime: `${dateStr}T${eveningTime}:00`,
+          patientId: medication.patientId,
+          taken: false,
+          skipped: false
+        });
+      } else if (medication.frequency === "weekly") {
+        // Only add if this is the same day of week as the start date
+        if (format(currentDate, "E") === format(startDate, "E")) {
+          newSchedules.push({
+            id: `${medication.id}-${dateStr}`,
+            medicationId: medication.id,
+            scheduledTime: `${dateStr}T${medication.time}:00`,
+            patientId: medication.patientId,
+            taken: false,
+            skipped: false
+          });
+        }
       }
+      
+      // Move to next day
+      currentDate = addDays(currentDate, 1);
     }
     
-    // Move to next day
-    currentDate = addDays(currentDate, 1);
+    // Add new schedules to existing ones
+    localStorage.setItem("medicationSchedules", JSON.stringify([...schedules, ...newSchedules]));
+    
+    // Set reminders for upcoming doses
+    scheduleReminders(newSchedules);
+    
+  } catch (error) {
+    console.error("Error generating schedules:", error);
   }
+};
+
+// Schedule reminders for upcoming doses
+const scheduleReminders = (schedules: MedicationSchedule[]) => {
+  // In a real app, we'd use a service worker, push notifications, etc.
+  // For this demo, we'll just check periodically via the checkDueMedications function
+  // which should be called via setInterval in the app
   
-  // Add new schedules to existing ones
-  localStorage.setItem("medicationSchedules", JSON.stringify([...schedules, ...newSchedules]));
+  console.log(`Scheduled reminders for ${schedules.length} upcoming doses`);
 };
 
 // Mark a medication as taken
@@ -338,10 +357,15 @@ export const checkDueMedications = () => {
   
   // Find schedules that are due in the next 5 minutes but not yet taken
   const dueSchedules = schedules.filter((schedule: MedicationSchedule) => {
-    const scheduledTime = new Date(schedule.scheduledTime);
-    const timeDiff = (scheduledTime.getTime() - now.getTime()) / (1000 * 60); // Difference in minutes
-    
-    return !schedule.taken && !schedule.skipped && timeDiff >= 0 && timeDiff <= 5;
+    try {
+      const scheduledTime = parseISO(schedule.scheduledTime);
+      const timeDiff = (scheduledTime.getTime() - now.getTime()) / (1000 * 60); // Difference in minutes
+      
+      return !schedule.taken && !schedule.skipped && timeDiff >= 0 && timeDiff <= 5;
+    } catch (error) {
+      console.error("Error parsing date for schedule:", schedule.id);
+      return false;
+    }
   });
   
   // Create notifications for each due schedule
@@ -349,23 +373,27 @@ export const checkDueMedications = () => {
     const medication = medications.find((med: Medication) => med.id === schedule.medicationId);
     if (!medication) return;
     
-    // Notify patient
-    addNotification(schedule.patientId, {
-      title: "Medication Due Soon",
-      message: `${medication.name} (${medication.dosage}) is due at ${format(parseISO(schedule.scheduledTime), "h:mm a")}.`,
-      timestamp: new Date().toISOString(),
-      type: "medication-due",
-      read: false
-    });
-    
-    // Notify caretakers
-    notifyCaretakers(schedule.patientId, {
-      title: `Medication Due Soon for Patient`,
-      message: `${medication.name} (${medication.dosage}) is due at ${format(parseISO(schedule.scheduledTime), "h:mm a")} for your patient.`,
-      timestamp: new Date().toISOString(),
-      type: "medication-due",
-      read: false
-    });
+    try {
+      // Notify patient
+      addNotification(schedule.patientId, {
+        title: "Medication Due Soon",
+        message: `${medication.name} (${medication.dosage}) is due at ${format(parseISO(schedule.scheduledTime), "h:mm a")}.`,
+        timestamp: new Date().toISOString(),
+        type: "medication-due",
+        read: false
+      });
+      
+      // Notify caretakers
+      notifyCaretakers(schedule.patientId, {
+        title: `Medication Due Soon for Patient`,
+        message: `${medication.name} (${medication.dosage}) is due at ${format(parseISO(schedule.scheduledTime), "h:mm a")} for your patient.`,
+        timestamp: new Date().toISOString(),
+        type: "medication-due",
+        read: false
+      });
+    } catch (error) {
+      console.error("Error creating notification:", error);
+    }
   });
   
   return dueSchedules;
@@ -379,10 +407,15 @@ export const checkMissedMedications = () => {
   
   // Find schedules that were due in the last 2 hours but not taken
   const missedSchedules = schedules.filter((schedule: MedicationSchedule) => {
-    const scheduledTime = new Date(schedule.scheduledTime);
-    const timeDiff = (now.getTime() - scheduledTime.getTime()) / (1000 * 60); // Difference in minutes
-    
-    return !schedule.taken && !schedule.skipped && timeDiff > 0 && timeDiff <= 120;
+    try {
+      const scheduledTime = parseISO(schedule.scheduledTime);
+      const timeDiff = (now.getTime() - scheduledTime.getTime()) / (1000 * 60); // Difference in minutes
+      
+      return !schedule.taken && !schedule.skipped && timeDiff > 0 && timeDiff <= 120;
+    } catch (error) {
+      console.error("Error parsing date for schedule:", schedule.id);
+      return false;
+    }
   });
   
   // Create notifications for each missed schedule
@@ -390,23 +423,27 @@ export const checkMissedMedications = () => {
     const medication = medications.find((med: Medication) => med.id === schedule.medicationId);
     if (!medication) return;
     
-    // Notify patient
-    addNotification(schedule.patientId, {
-      title: "Missed Medication",
-      message: `You missed your ${medication.name} (${medication.dosage}) at ${format(parseISO(schedule.scheduledTime), "h:mm a")}.`,
-      timestamp: new Date().toISOString(),
-      type: "medication-missed",
-      read: false
-    });
-    
-    // Notify caretakers
-    notifyCaretakers(schedule.patientId, {
-      title: "Patient Missed Medication",
-      message: `Your patient missed ${medication.name} (${medication.dosage}) at ${format(parseISO(schedule.scheduledTime), "h:mm a")}.`,
-      timestamp: new Date().toISOString(),
-      type: "medication-missed",
-      read: false
-    });
+    try {
+      // Notify patient
+      addNotification(schedule.patientId, {
+        title: "Missed Medication",
+        message: `You missed your ${medication.name} (${medication.dosage}) at ${format(parseISO(schedule.scheduledTime), "h:mm a")}.`,
+        timestamp: new Date().toISOString(),
+        type: "medication-missed",
+        read: false
+      });
+      
+      // Notify caretakers
+      notifyCaretakers(schedule.patientId, {
+        title: "Patient Missed Medication",
+        message: `Your patient missed ${medication.name} (${medication.dosage}) at ${format(parseISO(schedule.scheduledTime), "h:mm a")}.`,
+        timestamp: new Date().toISOString(),
+        type: "medication-missed",
+        read: false
+      });
+    } catch (error) {
+      console.error("Error creating notification:", error);
+    }
     
     // Mark as skipped after notifying
     schedule.skipped = true;
