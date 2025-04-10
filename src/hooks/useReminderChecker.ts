@@ -15,7 +15,7 @@ export function useReminderChecker() {
     // Set up intervals to check regularly
     const dueCheckerId = setInterval(() => {
       checkDueMedications();
-    }, 60000); // Check every minute for due medications
+    }, 30000); // Check every 30 seconds for due medications (increased frequency)
     
     const missedCheckerId = setInterval(() => {
       checkMissedMedications();

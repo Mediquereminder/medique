@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -10,7 +11,8 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle,
-  DialogTrigger
+  DialogTrigger,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { StockNavbar } from "@/components/stock/StockNavbar";
@@ -87,7 +89,18 @@ const Dashboard = () => {
 
   const formatScheduledTime = (scheduledTime: string) => {
     try {
+      // First check if we have a valid date string
+      if (!scheduledTime || typeof scheduledTime !== 'string') {
+        return "Invalid date";
+      }
+      
       const scheduledDate = parseISO(scheduledTime);
+      
+      // Check if date parsing was successful
+      if (isNaN(scheduledDate.getTime())) {
+        return "Invalid date";
+      }
+      
       const now = new Date();
       
       // Check if it's today
@@ -113,7 +126,7 @@ const Dashboard = () => {
       // Otherwise show full date
       return format(scheduledDate, "MMM d, h:mm a");
     } catch (error) {
-      console.error("Error formatting date:", error);
+      console.error("Error formatting date:", error, "for date:", scheduledTime);
       return "Invalid date";
     }
   };
