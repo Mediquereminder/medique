@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -11,12 +10,14 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle,
-  DialogTrigger
+  DialogTrigger,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { StockNavbar } from "@/components/stock/StockNavbar";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import { toast } from "@/hooks/use-toast";
+import { format, parseISO, isValid } from "date-fns";
 
 interface Medication {
   id: string;
@@ -63,52 +64,79 @@ const Dashboard = () => {
     setMedications(userMedications);
   }, [navigate]);
 
-  const formatNextDose = (nextDose: string) => {
-    const nextDoseDate = new Date(nextDose);
-    const now = new Date();
-    
-    // Check if it's today
-    if (
-      nextDoseDate.getDate() === now.getDate() &&
-      nextDoseDate.getMonth() === now.getMonth() &&
-      nextDoseDate.getFullYear() === now.getFullYear()
-    ) {
-      return `Today at ${nextDoseDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  const formatNextDose = (nextDoseStr: string) => {
+    try {
+      // First check if the string is a valid date
+      const nextDoseDate = parseISO(nextDoseStr);
+      
+      if (!isValid(nextDoseDate)) {
+        console.error("Invalid date string:", nextDoseStr);
+        return "Schedule pending";
+      }
+      
+      const now = new Date();
+      
+      // Check if it's today
+      if (
+        nextDoseDate.getDate() === now.getDate() &&
+        nextDoseDate.getMonth() === now.getMonth() &&
+        nextDoseDate.getFullYear() === now.getFullYear()
+      ) {
+        return `Today at ${format(nextDoseDate, 'h:mm a')}`;
+      }
+      
+      // Check if it's tomorrow
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      if (
+        nextDoseDate.getDate() === tomorrow.getDate() &&
+        nextDoseDate.getMonth() === tomorrow.getMonth() &&
+        nextDoseDate.getFullYear() === tomorrow.getFullYear()
+      ) {
+        return `Tomorrow at ${format(nextDoseDate, 'h:mm a')}`;
+      }
+      
+      // Otherwise show full date
+      return format(nextDoseDate, 'MMM d, h:mm a');
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "Schedule pending";
     }
-    
-    // Check if it's tomorrow
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    if (
-      nextDoseDate.getDate() === tomorrow.getDate() &&
-      nextDoseDate.getMonth() === tomorrow.getMonth() &&
-      nextDoseDate.getFullYear() === tomorrow.getFullYear()
-    ) {
-      return `Tomorrow at ${nextDoseDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-    }
-    
-    // Otherwise show full date
-    return nextDoseDate.toLocaleString([], {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
-  const isUpcoming = (nextDose: string) => {
-    const nextDoseDate = new Date(nextDose);
-    const now = new Date();
-    
-    // Consider it upcoming if it's within the next 3 hours
-    const threeHoursFromNow = new Date(now.getTime() + 3 * 60 * 60 * 1000);
-    return nextDoseDate <= threeHoursFromNow && nextDoseDate > now;
+  const isUpcoming = (nextDoseStr: string) => {
+    try {
+      const nextDoseDate = parseISO(nextDoseStr);
+      
+      if (!isValid(nextDoseDate)) {
+        return false;
+      }
+      
+      const now = new Date();
+      
+      // Consider it upcoming if it's within the next 3 hours
+      const threeHoursFromNow = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+      return nextDoseDate <= threeHoursFromNow && nextDoseDate > now;
+    } catch (error) {
+      console.error("Error checking if date is upcoming:", error);
+      return false;
+    }
   };
 
-  const isOverdue = (nextDose: string) => {
-    const nextDoseDate = new Date(nextDose);
-    const now = new Date();
-    return nextDoseDate < now;
+  const isOverdue = (nextDoseStr: string) => {
+    try {
+      const nextDoseDate = parseISO(nextDoseStr);
+      
+      if (!isValid(nextDoseDate)) {
+        return false;
+      }
+      
+      const now = new Date();
+      return nextDoseDate < now;
+    } catch (error) {
+      console.error("Error checking if date is overdue:", error);
+      return false;
+    }
   };
 
   const getNextDoseClass = (nextDose: string) => {
@@ -122,41 +150,70 @@ const Dashboard = () => {
   };
 
   // Function to calculate the time limit window text
-  const getTimeLimitText = (nextDose: string, timeLimit?: number) => {
+  const getTimeLimitText = (nextDoseStr: string, timeLimit?: number) => {
     if (!timeLimit) return null;
     
-    const nextDoseDate = new Date(nextDose);
-    const endTime = new Date(nextDoseDate.getTime() + (timeLimit * 60 * 1000));
-    
-    return `Take within ${timeLimit} min (by ${endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`;
+    try {
+      const nextDoseDate = parseISO(nextDoseStr);
+      
+      if (!isValid(nextDoseDate)) {
+        return `Take within ${timeLimit} min of scheduled time`;
+      }
+      
+      const endTime = new Date(nextDoseDate.getTime() + (timeLimit * 60 * 1000));
+      return `Take within ${timeLimit} min (by ${format(endTime, 'h:mm a')})`;
+    } catch (error) {
+      console.error("Error calculating time limit text:", error);
+      return `Take within ${timeLimit} min of scheduled time`;
+    }
   };
 
   // Function to check if a medication is within its time limit window
-  const isWithinTimeLimit = (nextDose: string, timeLimit?: number) => {
+  const isWithinTimeLimit = (nextDoseStr: string, timeLimit?: number) => {
     if (!timeLimit) return true;
     
-    const nextDoseDate = new Date(nextDose);
-    const now = new Date();
-    const endTime = new Date(nextDoseDate.getTime() + (timeLimit * 60 * 1000));
-    
-    return now >= nextDoseDate && now <= endTime;
+    try {
+      const nextDoseDate = parseISO(nextDoseStr);
+      
+      if (!isValid(nextDoseDate)) {
+        return false;
+      }
+      
+      const now = new Date();
+      const endTime = new Date(nextDoseDate.getTime() + (timeLimit * 60 * 1000));
+      
+      return now >= nextDoseDate && now <= endTime;
+    } catch (error) {
+      console.error("Error checking if within time limit:", error);
+      return false;
+    }
   };
 
   // Function to get the time remaining in the time window
-  const getTimeRemaining = (nextDose: string, timeLimit?: number) => {
+  const getTimeRemaining = (nextDoseStr: string, timeLimit?: number) => {
     if (!timeLimit) return null;
     
-    const nextDoseDate = new Date(nextDose);
-    const now = new Date();
-    const endTime = new Date(nextDoseDate.getTime() + (timeLimit * 60 * 1000));
-    
-    if (now < nextDoseDate) return null; // Time window hasn't started
-    if (now > endTime) return null; // Time window has ended
-    
-    const remainingMs = endTime.getTime() - now.getTime();
-    const remainingMin = Math.floor(remainingMs / (60 * 1000));
-    
-    return remainingMin;
+    try {
+      const nextDoseDate = parseISO(nextDoseStr);
+      
+      if (!isValid(nextDoseDate)) {
+        return null;
+      }
+      
+      const now = new Date();
+      const endTime = new Date(nextDoseDate.getTime() + (timeLimit * 60 * 1000));
+      
+      if (now < nextDoseDate) return null; // Time window hasn't started
+      if (now > endTime) return null; // Time window has ended
+      
+      const remainingMs = endTime.getTime() - now.getTime();
+      const remainingMin = Math.floor(remainingMs / (60 * 1000));
+      
+      return remainingMin;
+    } catch (error) {
+      console.error("Error calculating time remaining:", error);
+      return null;
+    }
   };
 
   const handleTakeMedication = (medicationId: string) => {
@@ -302,6 +359,9 @@ const Dashboard = () => {
                       <DialogContent>
                         <DialogHeader>
                           <DialogTitle>Request New Medication</DialogTitle>
+                          <DialogDescription>
+                            Fill in when you'd like to take your medication
+                          </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
                           <div className="space-y-2">
